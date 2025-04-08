@@ -1,0 +1,714 @@
+{
+	"info": {
+		"_postman_id": "a5bd82ed-3e89-40fd-9cca-0a925abd6c33",
+		"name": "Test Copy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33546317"
+	},
+	"item": [
+		{
+			"name": "Get news",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response has the required fields - title, small_text, main_text, and images\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData).to.be.an('array');\r",
+							"    responseData.forEach(function(item) {\r",
+							"        pm.expect(item).to.be.an('object');\r",
+							"        pm.expect(item.title).to.exist;\r",
+							"        pm.expect(item.small_text).to.exist;\r",
+							"        pm.expect(item.main_text).to.exist;\r",
+							"        pm.expect(item.images).to.exist;\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Each image object contains pk_image and title\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData).to.be.an('array');\r",
+							"    responseData.forEach(function(image) {\r",
+							"        pm.expect(image).to.have.property('pk_image');\r",
+							"        pm.expect(image).to.have.property('title');\r",
+							"    });\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is less than 200ms\", function () {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Content-Type header is application/json\", function () {\r",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/api/news/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"news",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status code is 201\", function () {\r",
+							"    pm.expect(pm.response.code).to.equal(201);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is less than 500ms\", function () {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(500);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response has required fields - email, firstname, lastname, and middlename\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData).to.be.an('object');\r",
+							"    pm.expect(responseData).to.have.property('email');\r",
+							"    pm.expect(responseData).to.have.property('firstname');\r",
+							"    pm.expect(responseData).to.have.property('lastname');\r",
+							"    pm.expect(responseData).to.have.property('middlename');\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Email is in a valid format\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData.email).to.be.a('string').and.to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/, \"Email format is not valid\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Firstname, lastname, and middlename are non-empty strings\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData).to.be.an('object');\r",
+							"    pm.expect(responseData.firstname).to.be.a('string').and.to.have.lengthOf.at.least(1, \"Firstname should not be empty\");\r",
+							"    pm.expect(responseData.lastname).to.be.a('string').and.to.have.lengthOf.at.least(1, \"Lastname should not be empty\");\r",
+							"    pm.expect(responseData.middlename).to.be.a('string').and.to.have.lengthOf.at.least(1, \"Middlename should not be empty\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-CSRFToken",
+						"value": "{{X-CSRFToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Cookie",
+						"value": "csrftoken={{CSRFToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "lastname",
+							"value": "qweqwe",
+							"type": "text"
+						},
+						{
+							"key": "firstname",
+							"value": "qweqwe",
+							"type": "text"
+						},
+						{
+							"key": "middlename",
+							"value": "qweqwe",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "kovitalij50@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "srEdaytgh0",
+							"type": "text"
+						},
+						{
+							"key": "confirm_password",
+							"value": "srEdaytgh0",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/api/users/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"users",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get CSRF",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.environment.set('X-CSRFToken', pm.response.headers.get('X-CSRFToken'))\r",
+							"pm.environment.set('CSRFToken', pm.cookies.get('csrftoken'))\r",
+							"\r",
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"    pm.expect(pm.response.code).to.equal(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is within an acceptable range\", function () {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(500);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Content-Type header is application/json\", function () {\r",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response has the required field - detail\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData).to.have.property('detail');\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"packages": {},
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/api/csrf/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"csrf",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Activate user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"    pm.expect(pm.response.code).to.equal(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is less than 200ms\", function () {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response has the required fields\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData).to.be.an('object');\r",
+							"    pm.expect(responseData.detail).to.exist;\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response has the expected Content-Type header\", function () {\r",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Detail field is a non-empty string\", function () {\r",
+							"  const responseData = pm.response.json();\r",
+							"  \r",
+							"  pm.expect(responseData).to.be.an('object');\r",
+							"  pm.expect(responseData.detail).to.be.a('string').and.to.have.lengthOf.at.least(1, \"Value should not be empty\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/api/activate/Mg/ci9l1w-e10b07c4cfbb91fd60f2f1ebe6c6eaec/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"activate",
+						"Mg",
+						"ci9l1w-e10b07c4cfbb91fd60f2f1ebe6c6eaec",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.sendRequest({\r",
+							"    url: 'http://localhost:8000/api/csrf/',\r",
+							"    method: 'GET'\r",
+							"}, (err, res) => {\r",
+							"    if(err) {\r",
+							"        console.log(err)\r",
+							"    } else {\r",
+							"        const setCookieHeader = res.headers.get('Set-Cookie');\r",
+							"        console.log('Set-Cookie header:', setCookieHeader);\r",
+							"\r",
+							"        // Парсинг куки для получения csrftoken и других данных\r",
+							"        const cookies = {};\r",
+							"        if (setCookieHeader) {\r",
+							"            setCookieHeader.split(';').forEach(cookie => {\r",
+							"                const [name, value] = cookie.split('=');\r",
+							"                if (name && value) {\r",
+							"                    cookies[name.trim()] = value.trim();\r",
+							"                }\r",
+							"            });\r",
+							"        }\r",
+							"\r",
+							"        // Получение csrftoken\r",
+							"        const sessionid = cookies['sessionid'];\r",
+							"\r",
+							"        pm.environment.set('X-CSRFToken', res.headers.get('X-CSRFToken'))\r",
+							"        pm.environment.set('CSRFToken', pm.cookies.get('csrftoken'))\r",
+							"        pm.environment.set('sessionid', sessionid)\r",
+							"    }\r",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.environment.set('sessionid', pm.cookies.get('sessionid'))\r",
+							"\r",
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is less than 200ms\", function () {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response schema contains required fields\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData).to.be.an('object');\r",
+							"    pm.expect(responseData).to.have.property('detail');\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Ensure the 'detail' field is a non-empty string\", function () {\r",
+							"  const responseData = pm.response.json();\r",
+							"  \r",
+							"  pm.expect(responseData).to.be.an('object');\r",
+							"  pm.expect(responseData.detail).to.be.a('string').and.to.have.lengthOf.at.least(1, \"Value should not be empty\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Content-Type header is application/json\", function () {\r",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-CSRFToken",
+						"value": "{{X-CSRFToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Cookie",
+						"value": "csrftoken={{CSRFToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "kovitalij50@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "srEdaytgh0",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/api/session/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"session",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.sendRequest({\r",
+							"    url: 'http://localhost:8000/api/csrf/',\r",
+							"    method: 'GET'\r",
+							"}, (err, res) => {\r",
+							"    if(err) {\r",
+							"        console.log(err)\r",
+							"    } else {\r",
+							"        const setCookieHeader = res.headers.get('Set-Cookie');\r",
+							"        console.log('Set-Cookie header:', setCookieHeader);\r",
+							"\r",
+							"        // Парсинг куки для получения csrftoken и других данных\r",
+							"        const cookies = {};\r",
+							"        if (setCookieHeader) {\r",
+							"            setCookieHeader.split(';').forEach(cookie => {\r",
+							"                const [name, value] = cookie.split('=');\r",
+							"                if (name && value) {\r",
+							"                    cookies[name.trim()] = value.trim();\r",
+							"                }\r",
+							"            });\r",
+							"        }\r",
+							"\r",
+							"        // Получение csrftoken\r",
+							"        const sessionid = cookies['sessionid'];\r",
+							"\r",
+							"        pm.environment.set('X-CSRFToken', res.headers.get('X-CSRFToken'))\r",
+							"        pm.environment.set('CSRFToken', pm.cookies.get('csrftoken'))\r",
+							"        pm.environment.set('sessionid', sessionid)\r",
+							"    }\r",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"    pm.expect(pm.response.code).to.equal(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is less than 200ms\", function () {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Content-Type header is application/json\", function () {\r",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response has the required field - detail\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    pm.expect(responseData.detail).to.exist;\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-CSRFToken",
+						"value": "{{X-CSRFToken}}",
+						"type": "text"
+					},
+					{
+						"key": "Cookie",
+						"value": "csrftoken={{CSRFToken}}; sessionid={{sessionid}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/api/session/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"session",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Message",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response time is within acceptable range\", function () {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(500);\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Response has the required fields\", function () {\r",
+							"    const responseData = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(responseData).to.be.an('object');\r",
+							"    pm.expect(responseData.status).to.exist;\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/api/messages/1/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"messages",
+						"1",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "change news",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.sendRequest({\r",
+							"    url: 'http://localhost:8000/api/csrf/',\r",
+							"    method: 'GET'\r",
+							"}, (err, res) => {\r",
+							"    if(err) {\r",
+							"        console.log(err)\r",
+							"    } else {\r",
+							"        const setCookieHeader = res.headers.get('Set-Cookie');\r",
+							"        console.log('Set-Cookie header:', setCookieHeader);\r",
+							"\r",
+							"        // Парсинг куки для получения csrftoken и других данных\r",
+							"        const cookies = {};\r",
+							"        if (setCookieHeader) {\r",
+							"            setCookieHeader.split(';').forEach(cookie => {\r",
+							"                const [name, value] = cookie.split('=');\r",
+							"                if (name && value) {\r",
+							"                    cookies[name.trim()] = value.trim();\r",
+							"                }\r",
+							"            });\r",
+							"        }\r",
+							"\r",
+							"        // Получение csrftoken\r",
+							"        const sessionid = cookies['sessionid'];\r",
+							"\r",
+							"        pm.environment.set('X-CSRFToken', res.headers.get('X-CSRFToken'))\r",
+							"        pm.environment.set('CSRFToken', pm.cookies.get('csrftoken'))\r",
+							"        pm.environment.set('sessionid', sessionid)\r",
+							"    }\r",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Cookie",
+						"value": "csrftoken={{CSRFToken}}; sessionid={{sessionid}}",
+						"type": "text"
+					},
+					{
+						"key": "X-CSRFToken",
+						"value": "{{X-CSRFToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "main_text",
+							"value": "lksrgfuyfbrkhbdrudfk",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/api/news/20/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"news",
+						"20",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "localhost:8000",
+			"type": "string"
+		}
+	]
+}

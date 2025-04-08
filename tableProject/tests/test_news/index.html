@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Form</title>
+</head>
+<body>
+    <form id="newsForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+        <br>
+
+        <label for="small_text">Small Text:</label>
+        <input type="text" id="small_text" name="small_text" required>
+        <br>
+
+        <label for="main_text">Main Text:</label>
+        <textarea id="main_text" name="main_text" required></textarea>
+        <br>
+
+        <label for="images">Upload Images:</label>
+        <input type="file" id="images" name="images" multiple required>
+        <br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="response"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
