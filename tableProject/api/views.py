@@ -203,6 +203,12 @@ class MessageView(APIView):
         message.delete()
         return Response({"status": "Сообщение удалено"}, status=status.HTTP_200_OK)
 
+class PingView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({'detail': 'pong ' + str(uuid.uuid4())}, status=status.HTTP_200_OK)
+
 
 class NewsListView(APIView):
     permission_classes = [AllowAny]

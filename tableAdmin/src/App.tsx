@@ -349,7 +349,9 @@ const App: React.FC = () => {
                                     margin: '5px'
                                 }}
                             >
-                                {!hideLabels && <span style={{ marginLeft: 4 }}>{item.label}</span>}
+                                {(['top', 'bottom'].includes(dockPosition) || !hideLabels) && (
+                                    <span style={{ marginLeft: 4 }}>{item.label}</span>
+                                )}
                             </Button>
                         </Tooltip>
                     )

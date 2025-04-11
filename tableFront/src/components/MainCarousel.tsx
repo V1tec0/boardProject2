@@ -49,8 +49,8 @@ const MainCarouselLayout: React.FC = () => {
                                 <p style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 20px' }}>
                                     К сожалению, при загрузке расписания произошла ошибка. Отсканируйте данный QR-код для просмотра актуальных новостей
                                 </p>
-                            </div>} 
-                        type="info" showIcon />
+                            </div>}
+                            type="info" showIcon />
                     ) : (
                         <Carousel autoplay autoplaySpeed={5000} effect="fade">
                             {Object.keys(scheduleTypes).map(type => {
@@ -76,20 +76,21 @@ const MainCarouselLayout: React.FC = () => {
 
                 <Col span={12}>
                     {newsError ? (
-                       <Alert message="Ошибка" description={
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50%', padding: '0 20px', borderRadius: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                <QRCode value='https://maufk.ru/novosti/novosti.html' icon='https://maufk.ru/favicon.ico' size={400} bgColor='rgb(0, 119, 200)' color='white' />
-                            </div>
-                            <p style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 20px' }}>
-                                К сожалению, при загрузке новостей произошла ошибка. Отсканируйте данный QR-код для просмотра актуального расписания
-                            </p>
-                        </div>} 
-                    type="info" showIcon />
+                        <Alert message="Ошибка" description={
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50%', padding: '0 20px', borderRadius: '20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    <QRCode value='https://maufk.ru/novosti/novosti.html' icon='https://maufk.ru/favicon.ico' size={400} bgColor='rgb(0, 119, 200)' color='white' />
+                                </div>
+                                <p style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 20px' }}>
+                                    К сожалению, при загрузке новостей произошла ошибка. Отсканируйте данный QR-код для просмотра актуального расписания
+                                </p>
+                            </div>}
+                            type="info" showIcon />
                     ) : (
                         <Carousel autoplay autoplaySpeed={5000} effect="fade">
                             {news.map((n, i) => (
                                 <div key={i} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '90vh' }}>
+                                    <New title={n.title} small_text={n.small_text} images={n.images} />
                                     <New title={n.title} small_text={n.small_text} images={n.images} />
                                 </div>
                             ))}

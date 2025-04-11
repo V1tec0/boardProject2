@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Button, Radio, Space, Switch } from 'antd';
+import { Typography, Button, Radio, Space, Switch, Flex, Divider } from 'antd';
 
 
 const { Title } = Typography;
@@ -17,6 +17,7 @@ const getCookie = (name: string): string | null => {
 };
 
 const Settings: React.FC = () => {
+    const [user] = useState(() => JSON.parse(localStorage.getItem('user')!))
     const [position, setPosition] = useState(localStorage.getItem('dockPosition') || 'bottom');
 
     const sendReloadCommand = async () => {
@@ -61,36 +62,40 @@ const Settings: React.FC = () => {
         <div>
             <Title level={1}>Настройки</Title>
 
-            <Title level={4}>Позиция меню</Title>
-            <Radio.Group onChange={handlePositionChange} value={position}>
-                <Space direction="vertical">
-                    <Radio value="bottom">Снизу</Radio>
-                    <Radio value="top">Сверху</Radio>
-                    <Radio value="left">Слева</Radio>
-                    <Radio value="right">Справа</Radio>
+            <Space>
+                <Space className='client-settings' direction="vertical">
+                    <Title level={3}>Позиция меню</Title>
+                    <Radio.Group onChange={handlePositionChange} value={position}>
+                        <Space direction="vertical">
+                            <Radio value="bottom">Снизу</Radio>
+                            <Radio value="top">Сверху</Radio>
+                            <Radio value="left">Слева</Radio>
+                            <Radio value="right">Справа</Radio>
+                        </Space>
+                    </Radio.Group>
+                    <Divider></Divider>
+                    <Title level={3}>Перезагрузка всех клиентов</Title>
+                    <p>Если возникла проблема с обновлением данных, просто нажмите на данную кнопку, и все активные клиенты перезапустятся</p>
+                    <Button type="primary" onClick={sendReloadCommand}>
+                        Перезагрузка клиентов
+                    </Button>
                 </Space>
-            </Radio.Group>
 
-            {/* Новый переключатель отступов
-            {['top', 'bottom'].includes(position) && (
-                <div style={{ marginTop: 16 }}>
-                    <Title level={5}>Отступы контента</Title>
-                    <Switch
-                        checked={useDockInterface}
-                        onChange={checked => {
-                            localStorage.setItem('useDockInterface', String(checked));
-                            window.location.reload();
-                        }}
-                        checkedChildren="Включено"
-                        unCheckedChildren="Выключено"
-                    />
-                </div>
-            )} */}
+                <Divider type='vertical' style={{height: '400px'}} />
 
-            <Button type="primary" onClick={sendReloadCommand}>
-                Перезагрузка клиентов
-            </Button>
-        </div>
+                <Space className='user-settings' direction="vertical">
+                    <Title level={3}>Данные пользователя</Title>
+                    <p>Имя: {user.firstname}</p>
+                    <p>Фамилия: {user.lastname}</p>
+                    <p>email: {user.email}</p>
+                    <Space>
+                        <Button>Изменить данные</Button>
+                        <Button type='primary'>Изменить пароль</Button>
+                    </Space>
+                </Space>
+            </Space>
+
+        </div >
     );
 };
 

@@ -36,9 +36,8 @@ const Users: React.FC<UsersProps> = () => {
     const [editingUser, setEditingUser] = useState<UserType | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [form] = Form.useForm();
+    const [user] = useState(() => JSON.parse(localStorage.getItem('user')!))
     // console.log(user)
-
-    const user = JSON.parse(localStorage.getItem('user')!);
 
     const getCsrfToken = async () => {
         try {

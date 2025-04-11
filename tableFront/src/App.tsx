@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react';
 import { Button, message } from 'antd';
 import ClientRegistration from './components/ClientRegistration';
 import { IData } from './types';
+import { ServerStatusProvider } from './ServerStatusContext';
 
 function App() {
     const [isRegistered, setIsRegistered] = useState(false)
     const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+    const [connected, setConnected] = useState('')
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -27,6 +29,38 @@ function App() {
             });
     }, []);
 
+    useEffect(() => {
+        const abortController = new AbortController();
+        // eslint-disable-next-line prefer-const
+        let pingInterval: ReturnType<typeof setInterval>;
+
+        const pingApi = () => {
+            fetch('http://localhost:8000/ping/', { signal: abortController.signal })
+                .then(res => {
+                    if (!res.ok) throw new Error('Сервер не отвечает');
+                    return res.json();
+                })
+                .then(data => {
+                    setConnected(data.detail);
+                    message.success('Клиент подключен к серверу');
+                })
+                .catch(() => {
+                    message.error('Ошибка подключения к серверу. Все запросы будут остановлены');
+                    abortController.abort(); // отмена всех текущих запросов
+                    clearInterval(pingInterval); // останавливаем пинг
+                });
+        };
+
+        pingApi(); // начальный запуск
+        pingInterval = setInterval(pingApi, 30000); // повторяем каждые 30 секунд
+
+        return () => {
+            abortController.abort();
+            clearInterval(pingInterval);
+        };
+    }, []);
+
+
 
     const handleRegister = () => {
         setShowRegistrationModal(true);
@@ -40,7 +74,7 @@ function App() {
     };
 
     return (
-        <>
+        <ServerStatusProvider>
             <Overlay />
             <MainCarouselLayout />
             {!isRegistered && (
@@ -53,7 +87,7 @@ function App() {
                 onCancel={() => setShowRegistrationModal(false)}
                 onSuccess={handleRegistrationSuccess}
             />
-        </>
+        </ServerStatusProvider>
     );
 }
 
