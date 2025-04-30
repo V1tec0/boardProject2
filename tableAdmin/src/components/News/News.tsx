@@ -27,14 +27,13 @@ export default function News() {
 
     const [activeNews, setActiveNews] = useState<NewsItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // const { showNotification } = useAppContext(); 
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 const [allNewsResponse, displayedResponse] = await Promise.all([
-                    fetch('http://localhost:8000/api/news/'),
-                    fetch('http://localhost:8000/api/displayed-news/')
+                    fetch(`${import.meta.env.VITE_API_URL}news/`),
+                    fetch(`${import.meta.env.VITE_API_URL}displayed-news/`)
                 ]);
 
                 if (!allNewsResponse.ok || !displayedResponse.ok) {
@@ -107,7 +106,7 @@ export default function News() {
 
     const sendReloadCommand = async () => {
         try {
-            const csrfresponse = await fetch('http://localhost:8000/api/csrf/', {
+            const csrfresponse = await fetch(`${import.meta.env.VITE_API_URL}csrf/`, {
                 credentials: 'include',
             });
             const xcsrfToken = csrfresponse.headers.get('X-CSRFToken');
@@ -116,7 +115,7 @@ export default function News() {
             const sessionid = getCookie('sessionid')
             const csrfToken = getCookie('csrftoken')
 
-            const response = await fetch(`http://localhost:8000/api/messages/reload/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}messages/reload/`, {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': xcsrfToken,
@@ -192,7 +191,7 @@ export default function News() {
             cancelText: 'Отмена',
             onOk: async () => {
                 try {
-                    const csrfresponse = await fetch('http://localhost:8000/api/csrf/', {
+                    const csrfresponse = await fetch(`${import.meta.env.VITE_API_URL}csrf/`, {
                         credentials: 'include',
                     });
                     const xcsrfToken = csrfresponse.headers.get('X-CSRFToken');
@@ -201,7 +200,7 @@ export default function News() {
                     const sessionid = getCookie('sessionid')
                     const csrfToken = getCookie('csrftoken')
 
-                    await fetch(`http://localhost:8000/api/news/${id}/`, {
+                    await fetch(`${import.meta.env.VITE_API_URL}news/${id}/`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRFToken': xcsrfToken,
@@ -210,7 +209,7 @@ export default function News() {
                         credentials: 'include',
                     });
                     // Обновляем данные...
-                } catch (error) {
+                } catch {
                     antdMessage.error('Ошибка удаления');
                 } finally {
                     window.location.reload()
@@ -233,7 +232,7 @@ export default function News() {
 
     const saveChanges = async () => {
         try {
-            const csrfresponse = await fetch('http://localhost:8000/api/csrf/', {
+            const csrfresponse = await fetch(`${import.meta.env.VITE_API_URL}csrf/`, {
                 credentials: 'include',
             });
             const xcsrfToken = csrfresponse.headers.get('X-CSRFToken');
@@ -242,7 +241,7 @@ export default function News() {
             const sessionid = getCookie('sessionid')
             const csrfToken = getCookie('csrftoken')
 
-            const response = await fetch('http://localhost:8000/api/update-displayed-news/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}update-displayed-news/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

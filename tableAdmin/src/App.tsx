@@ -75,7 +75,7 @@ const App: React.FC = () => {
 
     const getCsrfToken = async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/csrf/', { credentials: 'include' });
+            const response = await fetch(`${import.meta.env.VITE_API_URL}csrf/`, { credentials: 'include' });
             return response.headers.get('X-CSRFToken');
         } catch (error) {
             console.error('CSRF Error:', error);
@@ -86,7 +86,7 @@ const App: React.FC = () => {
     const checkAuth = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/user/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}user/`, {
                 credentials: 'include',
             });
 
@@ -157,7 +157,7 @@ const App: React.FC = () => {
         setLoading(true);
         try {
             const csrfToken = await getCsrfToken();
-            const response = await fetch('http://localhost:8000/api/session/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}session/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ const App: React.FC = () => {
         setLoading(true);
         try {
             const csrfToken = await getCsrfToken();
-            const response = await fetch('http://localhost:8000/api/users/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}users/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken || '' },
                 credentials: 'include',
@@ -221,7 +221,7 @@ const App: React.FC = () => {
     const handleActivate = async (activationCode: string) => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/activate/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}activate/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -247,7 +247,7 @@ const App: React.FC = () => {
     const handleLogout = async () => {
         const xcsrfToken = await getCsrfToken();
 
-        await fetch('http://localhost:8000/api/session/', {
+        await fetch(`${import.meta.env.VITE_API_URL}session/`, {
             method: 'DELETE',
             headers: {
                 'X-CSRFToken': xcsrfToken || undefined

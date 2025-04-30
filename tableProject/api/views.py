@@ -759,6 +759,22 @@ class ClientView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request):
+        token = request.data.get('token')
+
+        channel_layer = get_channel_layer()
+
+        async_to_sync(channel_layer.group_send)(
+            "websocket_group",
+            {
+                "type": "delete",
+                'client': token
+            }
+        )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 
 class AdminUserView(APIView):
     permission_classes = [IsAuthenticated]

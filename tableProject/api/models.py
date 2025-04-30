@@ -111,8 +111,8 @@ class Client(models.Model):
     pk_client = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     token = models.CharField(max_length=420)
-    floor = models.IntegerField(max_length=1)
-    building = models.IntegerField(max_length=1)
+    floor = models.IntegerField()
+    building = models.IntegerField()
 
     class Meta:
         db_table = 'client'

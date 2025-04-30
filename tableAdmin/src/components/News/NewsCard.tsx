@@ -44,7 +44,7 @@ export default function NewsCard({
             {news.images.length > 0 && (
                 <div className="news-images">
                     {news.images.map((img, i) => (
-                        <img key={i} src={'http://localhost:8000/media/news/' + img.title} alt={`Image ${i}`} />
+                        <img key={i} src={`${import.meta.env.VITE_MEDIA_URL}news/` + img.title} alt={`Image ${i}`} />
                     ))}
                 </div>
             )}

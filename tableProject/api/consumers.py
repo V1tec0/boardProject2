@@ -85,6 +85,10 @@ class MyWebSocketConsumer(AsyncWebsocketConsumer):
         """Отправляем команду перезагрузки всем подключенным клиентам"""
         await self.send(text_data=json.dumps({"type": "reload"}))
 
+    async def delete_client(self, event):
+        """Отправляем команду перезагрузки всем подключенным клиентам"""
+        await self.send(text_data=json.dumps({"type": "delete", 'client': event['client']}))
+
     async def send_message(self, event):
         action = event['message'].get('action')
 

@@ -47,13 +47,13 @@ const BellAdminPanel: React.FC = () => {
     const fetchData = async () => {
         try {
             // Получаем CSRF токен
-            const csrfResponse = await fetch('http://localhost:8000/api/csrf/', {
+            const csrfResponse = await fetch(`${import.meta.env.VITE_API_URL}csrf/`, {
                 credentials: 'include',
             });
             const xcsrfToken = csrfResponse.headers.get('X-CSRFToken');
 
             // Загружаем шаблоны
-            const templatesResponse = await fetch('http://localhost:8000/api/bell-templates/', {
+            const templatesResponse = await fetch(`${import.meta.env.VITE_API_URL}bell-templates/`, {
                 headers: {
                     'X-CSRFToken': xcsrfToken || '',
                     'Cookie': `csrftoken=${getCookie('csrftoken')}; sessionid=${getCookie('sessionid')}`
@@ -63,7 +63,7 @@ const BellAdminPanel: React.FC = () => {
             setTemplates(await templatesResponse.json());
 
             // Загружаем активное расписание
-            const scheduleResponse = await fetch('http://localhost:8000/api/active-schedule/', {
+            const scheduleResponse = await fetch(`${import.meta.env.VITE_API_URL}active-schedule/`, {
                 headers: {
                     'X-CSRFToken': xcsrfToken || '',
                     'Cookie': `csrftoken=${getCookie('csrftoken')}; sessionid=${getCookie('sessionid')}`
@@ -84,12 +84,12 @@ const BellAdminPanel: React.FC = () => {
     // Изменённая функция handleSwitchTemplate
     const handleSwitchTemplate = async (templateId: number) => {
         try {
-            const csrfResponse = await fetch('http://localhost:8000/api/csrf/', {
+            const csrfResponse = await fetch(`${import.meta.env.VITE_API_URL}csrf/`, {
                 credentials: 'include',
             });
             const xcsrfToken = csrfResponse.headers.get('X-CSRFToken');
 
-            const response = await fetch('http://localhost:8000/api/switch-template/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}switch-template/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -115,14 +115,14 @@ const BellAdminPanel: React.FC = () => {
     // Обработка формы
     const handleFormSubmit = async (values: any) => {
         try {
-            const csrfResponse = await fetch('http://localhost:8000/api/csrf/', {
+            const csrfResponse = await fetch(`${import.meta.env.VITE_API_URL}csrf/`, {
                 credentials: 'include',
             });
             const xcsrfToken = csrfResponse.headers.get('X-CSRFToken');
 
             const endpoint = editingSchedule
-                ? `http://localhost:8000/api/bell-schedules/${editingSchedule.id}/`
-                : 'http://localhost:8000/api/bell-schedules/';
+                ? `${import.meta.env.VITE_API_URL}bell-schedules/${editingSchedule.id}/`
+                : `${import.meta.env.VITE_API_URL}bell-schedules/`;
 
             const method = editingSchedule ? 'PATCH' : 'POST';
 
