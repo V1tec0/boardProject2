@@ -42,7 +42,7 @@ const ClientRegistration: React.FC<ClientRegistrationProps> = ({ visible, onCanc
 
     const handleSubmit = async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/client/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}client/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: clientName, floor, building }),

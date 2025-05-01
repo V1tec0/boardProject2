@@ -14,19 +14,23 @@ interface NewsProps {
 
 const New: React.FC<NewsProps> = ({ title, small_text, images }) => {
     return (
-        <Card style={{ width: '100%', maxWidth: 1000, height: 250, marginBottom: 20 }}>
+        <Card style={{
+            width: '100%',
+            maxWidth: '600px',
+            height: 'auto',
+            marginBottom: '1rem',
+        }}>
             <Row style={{ height: '100%' }}>
                 <Col span={8}>
                     {images.length > 0 && (
                         <img
-                            src={`http://localhost:8000/media/news/${images[0].title}`}
+                            src={`${import.meta.env.VITE_MEDIA_URL}news/${images[0].title}`}
                             alt={title}
                             style={{
                                 width: '100%',
                                 height: '100%',
+                                maxHeight: '200px',
                                 objectFit: 'cover',
-                                borderRadius: '4px',
-                                margin: 0 // уменьшенные отступы у картинки
                             }}
                         />
                     )}

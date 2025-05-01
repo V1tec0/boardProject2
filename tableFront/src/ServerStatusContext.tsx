@@ -9,7 +9,7 @@ export const ServerStatusProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const pingInterval = setInterval(() => {
-            fetch('http://localhost:8000/ping/')
+            fetch(`${import.meta.env.VITE_BASE_URL}ping/`)
                 .then((res) => {
                     if (!res.ok) throw new Error();
                     return res.json();

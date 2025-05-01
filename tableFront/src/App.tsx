@@ -5,18 +5,29 @@ import { useEffect, useState } from 'react';
 import { Button, message } from 'antd';
 import ClientRegistration from './components/ClientRegistration';
 import { IData } from './types';
+import horizontal from './assets/horizontal.png';
+import vertical from './assets/vertical.png'
 import { ServerStatusProvider } from './ServerStatusContext';
+import { useOrientation } from './hooks/useOrientation';
 
 function App() {
     const [isRegistered, setIsRegistered] = useState(false)
     const [showRegistrationModal, setShowRegistrationModal] = useState(false);
     const [connected, setConnected] = useState('')
+    const isPortrait = useOrientation();
+
+    console.log(import.meta.env.VITE_BASE_URL_EXTRA, ' - EXTRA');
+
+    useEffect(() => {
+        const backgroundImage = isPortrait ? vertical : horizontal;
+        document.body.style.backgroundImage = `url(${backgroundImage})`;
+    }, [isPortrait]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         console.log(token);
 
-        fetch(`http://localhost:8000/api/client/?token=${token}`, {
+        fetch(`${import.meta.env.VITE_API_URL}client/?token=${token}`, {
             method: 'GET'
         })
             .then(res => res.json())
@@ -35,7 +46,7 @@ function App() {
         let pingInterval: ReturnType<typeof setInterval>;
 
         const pingApi = () => {
-            fetch('http://localhost:8000/ping/', { signal: abortController.signal })
+            fetch(`${import.meta.env.VITE_BASE_URL}ping/`, { signal: abortController.signal })
                 .then(res => {
                     if (!res.ok) throw new Error('Сервер не отвечает');
                     return res.json();
@@ -60,7 +71,7 @@ function App() {
         };
     }, []);
 
-
+    console.log(connected)
 
     const handleRegister = () => {
         setShowRegistrationModal(true);

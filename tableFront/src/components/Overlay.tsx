@@ -200,7 +200,7 @@ const Overlay: React.FC = () => {
 
         const checkBellSchedule = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/active-schedule/');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}active-schedule/`);
                 const { schedules } = await response.json();
 
                 const now = moment();
@@ -219,7 +219,7 @@ const Overlay: React.FC = () => {
                         processedBellTimes.current = new Set(entries.slice(-50));
                     }
 
-                    fetch(`http://localhost:8000/api/messages/${bell.bell_type}`);
+                    fetch(`${import.meta.env.VITE_API_URL}messages/${bell.bell_type}`);
 
                     setCurrentBell(bell);
                     setBellModalVisible(true);
@@ -240,7 +240,7 @@ const Overlay: React.FC = () => {
     }, [isServerAlive]);
 
     useEffect(() => {
-        const socket = new WebSocket(`ws://localhost:8000/ws/msgs/`);
+        const socket = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_URL}ws/msgs/`);
 
         socket.onopen = () => {
             console.log('WebSocket connected');
@@ -274,6 +274,7 @@ const Overlay: React.FC = () => {
                     const token = localStorage.getItem('token')
                     if(token === data.client) {
                         localStorage.clear()
+                        window.location.reload()
                     }
                 }
             } catch (err) {

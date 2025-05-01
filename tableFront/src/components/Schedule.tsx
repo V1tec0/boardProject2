@@ -4,6 +4,7 @@ import { Carousel, Spin, Alert } from 'antd';
 interface ScheduleItem {
     type: string;
     url: string;
+    filename: string;
 }
 
 const ScheduleSlider: React.FC = () => {
@@ -21,7 +22,7 @@ const ScheduleSlider: React.FC = () => {
     useEffect(() => {
         const fetchSchedule = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/schedule/');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}schedule/`);
                 if (!response.ok) throw new Error('Ошибка загрузки расписания');
                 const data = await response.json();
                 setSchedules(data.schedules);
@@ -38,29 +39,39 @@ const ScheduleSlider: React.FC = () => {
     if (loading) return <Spin />;
     if (error) return <Alert message="Ошибка" description={error} type="error" showIcon />;
 
+
     return (
-        <Carousel autoplay dots={false} effect="fade" style={{minWidth: '100px', maxWidth: '600px'}}>
+        <Carousel autoplay dots={false} effect="fade" autoplaySpeed={10000}>
             {schedules.map((schedule) => (
-                <div key={schedule.type} style={{ position: 'relative', width: '100%', height: '100vh' }}>
-                    <h3
-                        style={{
-                            position: 'absolute',
-                            top: '20px',
-                            zIndex: 1,
-                            color: '#fff',
-                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                        }}
-                    >
+                <div key={schedule.type} style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '1rem',
+                }}>
+                    <h3 style={{
+                        marginBottom: '1rem',
+                        color: '#fff',
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                    }}>
                         {scheduleTypes[schedule.type]}
                     </h3>
                     <img
-                        src={`http://localhost:8000${schedule.url}`}
+                        src={`${import.meta.env.VITE_MEDIA_URL}schedule/${schedule.filename}`}
                         alt={`Расписание для ${scheduleTypes[schedule.type]}`}
-                        style={{ width: '100%', height: '100vh', objectFit: 'contain' }}
+                        style={{
+                            maxWidth: '90vw',
+                            maxHeight: '80vh',
+                            width: 'auto',
+                            height: 'auto',
+                            objectFit: 'contain',
+                        }}
                     />
                 </div>
             ))}
         </Carousel>
+
     );
 };
 
