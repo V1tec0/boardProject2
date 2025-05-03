@@ -41,28 +41,22 @@ const ScheduleSlider: React.FC = () => {
 
 
     return (
-        <Carousel autoplay dots={false} effect="fade" autoplaySpeed={10000}>
+        <Carousel autoplay dots={false} effect="fade" autoplaySpeed={10000} style={{ height: '100%' }}>
             {schedules.map((schedule) => (
                 <div key={schedule.type} style={{
+                    height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '1rem',
                 }}>
-                    <h3 style={{
-                        marginBottom: '1rem',
-                        color: '#fff',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                    }}>
-                        {scheduleTypes[schedule.type]}
-                    </h3>
                     <img
                         src={`${import.meta.env.VITE_MEDIA_URL}schedule/${schedule.filename}`}
                         alt={`Расписание для ${scheduleTypes[schedule.type]}`}
                         style={{
                             maxWidth: '90vw',
-                            maxHeight: '80vh',
+                            maxHeight: '87vh',
                             width: 'auto',
                             height: 'auto',
                             objectFit: 'contain',

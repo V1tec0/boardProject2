@@ -24,15 +24,16 @@ from django.utils import timezone
 from django.db import transaction
 from django.core.cache import cache
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-from api.models import Message, News, Image, User, DisplayedNews, BellSchedule, BellTemplate, Video, Client
+from api.models import Message, News, Image, User, DisplayedNews, BellSchedule, BellTemplate, Video, Client, LogEntry
 from api.serializers import MessageSerializer, NewsSerializer, UserSerializer, DisplayedNewsSerializer, \
-    BellScheduleSerializer, BellTemplateSerializer, VideoSerializer, ClientSerializer
+    BellScheduleSerializer, BellTemplateSerializer, VideoSerializer, ClientSerializer, LogEntrySerializer
 from api.utils import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -142,6 +143,16 @@ class MessageView(APIView):
                             "isprimary": message.isprimary,
                             "action": action
                         }
+                    }
+                )
+
+                # сразу после send.message
+                async_to_sync(channel_layer.group_send)(
+                    "websocket_group",
+                    {
+                        "type": "message_status",
+                        "pk_message": message.pk_message,
+                        "isshowing": message.isshowing
                     }
                 )
 
@@ -610,6 +621,42 @@ class ScheduleView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    def delete(self, request):
+        if not request.user.is_authenticated:
+            return Response({'detail': 'User is not authorized!'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        """Удаление файла существующего расписания"""
+
+        schedule_type = request.data.get('type')
+        date = request.data.get('date')
+
+        if schedule_type not in self.VALID_SCHEDULE_TYPES:
+            return Response(
+                {"error": f"Invalid schedule type. Valid types: {', '.join(self.VALID_SCHEDULE_TYPES)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            target_date = datetime.strptime(date, "%Y.%m.%d").date()
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Invalid date format. Use YYYY.MM.DD"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Удаляем все файлы с указанной датой и типом
+        existing_files = default_storage.listdir('schedule')[1]
+        pattern = f"{date}_{schedule_type}_"
+        found_files = [f for f in existing_files if f.startswith(pattern)]
+
+        if not found_files:
+            return Response({"error": "Schedule does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        for filename in found_files:
+            default_storage.delete(f"schedule/{filename}")
+
+        return Response({"message": "File deleted successfully"}, status=status.HTTP_200_OK)
+
 class BellTemplateListView(APIView):
     """
     Получение списка всех шаблонов расписаний.
@@ -750,7 +797,7 @@ class ClientView(APIView):
 
     def post(self, request):
         name = request.data.get('name')
-        token = urlsafe_base64_encode(force_bytes(name))
+        token = uuid.uuid4().hex[:10]
         floor = request.data.get('floor')
         building = request.data.get('building')
         serializer = ClientSerializer(data={'name': name, 'token': token, 'floor': floor, 'building': building})
@@ -774,7 +821,11 @@ class ClientView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
+class LogEntryListView(ListAPIView):
+    queryset = LogEntry.objects.all().order_by('-timestamp')
+    serializer_class = LogEntrySerializer
+    permission_classes = [IsAdminUser]  # только для админов
+    pagination_class = None  # можешь подключить свою пагинацию, если нужно
 
 class AdminUserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -918,7 +969,7 @@ class UserView(APIView):
             user.is_admin = is_admin
             user.save()
 
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(request.user, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.update(request.user, serializer.validated_data)
             return Response(serializer.data, status=status.HTTP_202_ACCEPTED)

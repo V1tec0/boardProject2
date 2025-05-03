@@ -87,7 +87,7 @@ function App() {
     return (
         <ServerStatusProvider>
             <Overlay />
-            <MainCarouselLayout />
+            <MainCarouselLayout isPortrait={isPortrait} />
             {!isRegistered && (
                 <Button type="primary" onClick={handleRegister} style={{ margin: '20px' }}>
                     Зарегистрировать клиента

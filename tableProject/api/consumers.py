@@ -4,9 +4,11 @@ from channels.middleware import BaseMiddleware
 from asgiref.sync import sync_to_async, async_to_sync
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import DisplayedNews
+from .models import DisplayedNews, Message
 from channels.db import database_sync_to_async
 from .serializers import DisplayedNewsSerializer
+from .utils import send_message_logic
+
 
 class NewsConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -53,6 +55,14 @@ class WebSocketCORSMiddleware(BaseMiddleware):
         return await super().__call__(scope, receive, send)
 
 class MyWebSocketConsumer(AsyncWebsocketConsumer):
+    @database_sync_to_async
+    def get_all_message_statuses(self):
+        return [
+            {'pk_message': m.pk_message, 'isshowing': m.isshowing}
+            for m in Message.objects.all()
+        ]
+
+
     async def connect(self):
         # Подключаемся к группе WebSocket
         await self.channel_layer.group_add("websocket_group", self.channel_name)
@@ -67,19 +77,37 @@ class MyWebSocketConsumer(AsyncWebsocketConsumer):
             'message': 'WebSocket connection established'
         }))
 
+        messages = await self.get_all_message_statuses()
+        await self.send(text_data=json.dumps({
+            'type': 'all_statuses',
+            'data': messages
+        }))
+
     async def disconnect(self, close_code):
         # Удаляем канал из группы при отключении
         await self.channel_layer.group_discard("websocket_group", self.channel_name)
         print(f"Removed {self.channel_name} from websocket_group")
 
     async def receive(self, text_data):
-        # Обработка входящих сообщений (можно добавить логику)
-        try:
-            data = json.loads(text_data)
-            print(f"Received data: {data}")
-            # Здесь можно добавить логику обработки входящих сообщений
-        except json.JSONDecodeError:
-            print("Received invalid JSON")
+        data = json.loads(text_data)
+        msg_type = data.get('type')
+
+        print('WS receive:', text_data)
+
+        if msg_type == 'send_message':
+            await self.handle_send_message(data)
+
+    async def handle_send_message(self, data):
+        pk = data.get('message_id')
+        show_at = data.get('show_at')  # в ISO формате или None
+        duration = data.get('duration')  # int или None
+
+        await self.send_to_view(pk, show_at, duration)
+
+    @database_sync_to_async
+    def send_to_view(self, pk, show_at, duration):
+        # Имитируем вызов логики из views.py (можно перенести её в утилиту)
+        send_message_logic(pk, show_at, duration)
 
     async def reload_clients(self, event):
         """Отправляем команду перезагрузки всем подключенным клиентам"""
@@ -89,16 +117,26 @@ class MyWebSocketConsumer(AsyncWebsocketConsumer):
         """Отправляем команду перезагрузки всем подключенным клиентам"""
         await self.send(text_data=json.dumps({"type": "delete", 'client': event['client']}))
 
+    async def message_status(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'status_update',
+            'data': {
+                'pk_message': event['pk_message'],
+                'isshowing': event['isshowing'],
+            }
+        }))
+
     async def send_message(self, event):
-        action = event['message'].get('action')
+        print('Обработка group_send send_message:', event)
+        action = event.get('action')  # ← исправлено
 
         if action == 'show':
             await self.send(text_data=json.dumps({
                 'type': 'message',
                 'data': {
-                    'pk_message': event['message']['pk_message'],
-                    'text': event['message']['text'],
-                    'isprimary': event['message']['isprimary'],
+                    'pk_message': event['pk_message'],
+                    'text': event['text'],
+                    'isprimary': event['isprimary'],
                     'action': 'show'
                 }
             }))
@@ -106,8 +144,9 @@ class MyWebSocketConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({
                 'type': 'control',
                 'action': 'hide',
-                'pk_message': event['message']['pk_message']
+                'pk_message': event['pk_message']
             }))
+
 
 class VideoConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -122,3 +161,14 @@ class VideoConsumer(AsyncWebsocketConsumer):
             'type': 'video_update',
             'data': event["data"]
         }))
+
+class LogConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.channel_layer.group_add('logs', self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard('logs', self.channel_name)
+
+    async def new_log(self, event):
+        await self.send(text_data=json.dumps(event['log']))

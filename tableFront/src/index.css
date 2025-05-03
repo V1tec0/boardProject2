@@ -13,6 +13,14 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 a {
     font-weight: 500;
     color: #646cff;
@@ -24,6 +32,7 @@ a:hover {
 }
 
 body {
+    height: 100%;
     margin: 0;
     display: flex;
     place-items: center;
@@ -78,4 +87,13 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+}
+
+.slick-list {
+    height: 100% !important;
+}
+
+.ant-flex {
+    margin-left: -10vw;
+    margin-right: -10vw;
 }

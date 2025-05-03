@@ -10,10 +10,13 @@ import {
     LogoutOutlined,
     LeftOutlined,
     RightOutlined,
-    MenuOutlined
+    MenuOutlined,
+    FileSearchOutlined
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import AuthModal from './components/AuthModal';
+import { useWindowSize } from './hooks/useWindowSize';
+
 
 const { Content } = Layout;
 
@@ -51,8 +54,10 @@ const App: React.FC = () => {
     };
 
     const showAuth = location.state?.showAuthModal || (location.pathname === '/auth')
+    const { width } = useWindowSize();
 
-    console.log(authVisible);
+    const isCompact = width < 1190; // пример: меньше полной ширины
+    const hideAllLabels = width < 800; // пример: ещё меньше
 
 
     useEffect(() => {
@@ -274,7 +279,8 @@ const App: React.FC = () => {
                 '3': '/news',
                 '4': '/messages',
                 '5': '/settings',
-                '7': '/users'
+                '7': '/users',
+                '8': '/logs' // добавлено
             }
             navigate(routes[key as keyof typeof routes] || '/')
         }
@@ -287,7 +293,8 @@ const App: React.FC = () => {
             '/news': '3',
             '/messages': '4',
             '/settings': '5',
-            '/users': '7'
+            '/users': '7',
+            '/logs': '8'
         }
         return pathToKeyMap[location.pathname] || '1'
     }
@@ -295,7 +302,10 @@ const App: React.FC = () => {
     const menuItems = user
         ? [
             { key: '1', icon: <HomeOutlined />, label: 'Главная', path: '/' },
-            ...(isAdmin ? [{ key: '7', icon: <UserOutlined />, label: 'Пользователи', path: '/users' }] : []),
+            ...(isAdmin ? [
+                { key: '7', icon: <UserOutlined />, label: 'Пользователи', path: '/users' },
+                { key: '8', icon: <FileSearchOutlined />, label: 'Логи', path: '/logs' }
+            ] : []),
             { key: '2', icon: <CalendarOutlined />, label: 'Расписание', path: '/schedule' },
             { key: '3', icon: <FileTextOutlined />, label: 'Новости', path: '/news' },
             { key: '4', icon: <MessageOutlined />, label: 'Сообщения', path: '/messages' },
@@ -306,6 +316,7 @@ const App: React.FC = () => {
         : [{ key: '1', icon: <HomeOutlined />, label: 'Главная', path: '/' }, { key: '5', icon: <SettingOutlined />, label: 'Настройки', path: '/settings' },]
 
     if (loading) return <Spin size="large" fullscreen />;
+    const activeKey = getSelectedKey();
 
     return (
         <Layout style={{ minHeight: '100vh' }}>
@@ -350,7 +361,7 @@ const App: React.FC = () => {
                                 }}
                             >
                                 {(['top', 'bottom'].includes(dockPosition) || !hideLabels) && (
-                                    <span style={{ marginLeft: 4 }}>{item.label}</span>
+                                    <span style={{ marginLeft: (!hideAllLabels && (!isCompact || activeKey === item.key)) ? 4 : 0 }}>{(!hideAllLabels && (!isCompact || activeKey === item.key)) && item.label}</span>
                                 )}
                             </Button>
                         </Tooltip>
@@ -368,7 +379,7 @@ const App: React.FC = () => {
 
             <Layout>
                 <Content style={contentStyles}>
-                    <Outlet />
+                    <Outlet context={{ handleLogout }} />
                 </Content>
             </Layout>
         </Layout>

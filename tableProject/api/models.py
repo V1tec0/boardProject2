@@ -84,6 +84,20 @@ class User(AbstractBaseUser):
         # Simplest possible answer: All admins are staff
         return self.is_admin
 
+class LogEntry(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='api_log_entries')
+    method = models.CharField(max_length=10)
+    path = models.CharField(max_length=255)
+    action = models.CharField(max_length=255)
+    data = models.JSONField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.timestamp}] {self.user or 'Аноним'} — {self.method} {self.path}"
+
+    class Meta:
+        db_table = 'log_entries'
+
 class BellTemplate(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, unique=True)

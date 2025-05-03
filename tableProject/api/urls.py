@@ -3,7 +3,7 @@ from django.urls import path
 from api.views import NewsView, ScheduleView, NewsListView, MessageListView, MessageView, SessionView, \
     ActivateView, CSRFToken, UserView, ResetPasswordView, \
     UpdateDisplayedNewsView, GetDisplayedNewsView, ParsedNewsView, UsersView, AdminUserView, BellTemplateListView, \
-    SwitchActiveTemplateView, ActiveScheduleView, BellScheduleView, VideoView, ClientView
+    SwitchActiveTemplateView, ActiveScheduleView, BellScheduleView, VideoView, ClientView, LogEntryListView
 
 urlpatterns = [
     path('news/', NewsListView.as_view(), name='news'),
@@ -13,8 +13,7 @@ urlpatterns = [
     path('messages/<id_message>/', MessageView.as_view(), name='message'),
     path('users/', UsersView.as_view(), name='users'),
     path('activate/', ActivateView.as_view(), name='activate'),
-    path('reset_password/<str:uid_encode>/<str:token>/', ResetPasswordView.as_view(), name='reset_password'),
-    path('reset_password/<int:uid>/', ResetPasswordView.as_view(), name='reset_password'),
+    path('reset_password/', ResetPasswordView.as_view(), name='reset_password'),
     path('user/', UserView.as_view(), name='user'),
     path('admin/users/<int:user_id>/', AdminUserView.as_view(), name='admin-user'),
     path('csrf/', CSRFToken.as_view(), name='csrf'),
@@ -29,4 +28,5 @@ urlpatterns = [
     path('videos/', VideoView.as_view(), name='videos'),
     path('bell-schedules/<int:schedule_id>/', BellScheduleView.as_view(), name='bell-schedule-detail'),
     path('client/', ClientView.as_view(), name='client'),
+    path('logs/', LogEntryListView.as_view(), name='log-list'),
 ]

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Carousel, Row, Col, Spin, Alert, QRCode } from 'antd';
+import { Carousel, Row, Col, Spin, Alert, QRCode, Flex } from 'antd';
 import TimeHeader from './TimeHeader';
 import New from './New';
 import { INews, NewsItem } from '../types';
@@ -10,11 +10,27 @@ interface ScheduleItem {
     url: string;
 }
 
-const scheduleTypes: { [key: string]: string } = {
-    s: 'Студенты',
-    p: 'Преподаватели',
-    z: 'Заочники'
+const slideStyle: React.CSSProperties = {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
+    boxSizing: 'border-box',
 };
+
+const imageStyle: React.CSSProperties = {
+    width: '90vw',
+    maxHeight: '80vh',
+    objectFit: 'contain' as const,
+};
+
+const newsSlideStyle: React.CSSProperties = {
+    ...slideStyle,
+    gap: '1rem',
+};
+
 
 const MainCarouselLayout: React.FC<{ isPortrait: boolean }> = ({ isPortrait }) => {
     const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
@@ -43,38 +59,112 @@ const MainCarouselLayout: React.FC<{ isPortrait: boolean }> = ({ isPortrait }) =
     }
 
     if (isPortrait) {
-        return (
-            <div>
-                <TimeHeader />
-                <Carousel autoplay vertical dots={false} style={{ height: '100vh' }}>
-                    {schedules.map((scheduleItem) => (
-                        <div key={scheduleItem.type} style={{ textAlign: 'center' }}>
-                            <h3>{scheduleTypes[scheduleItem.type]}</h3>
-                            <img
-                                src={`${import.meta.env.VITE_BASE_URL}${scheduleItem.url}`}
-                                alt={scheduleTypes[scheduleItem.type]}
-                                style={{ maxHeight: '85vh', maxWidth: '90vw', objectFit: 'contain' }}
-                            />
-                        </div>
-                    ))}
+        const scheduleMap = {
+            s: schedules.find(s => s.type === 's'),
+            p: schedules.find(s => s.type === 'p'),
+            z: schedules.find(s => s.type === 'z'),
+        };
 
-                    {chunkedNews.map((group, index) => (
-                        <div key={index} style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            {group.map((n, i) => (
-                                <New key={i} title={n.title} small_text={n.small_text} images={n.images} />
-                            ))}
-                        </div>
-                    ))}
-                </Carousel>
+        const base = import.meta.env.VITE_HOST;
+
+        const getNewsChunk = (start: number) =>
+            news.slice(start, start + 3).map((n, i) => (
+                <New key={i} {...n} />
+            ));
+
+        const portraitSlides = [];
+
+        if (scheduleMap.s) {
+            portraitSlides.push(
+                <div key="slide-schedule-s" style={slideStyle}>
+                    <h3>Студенты</h3>
+                    <img
+                        src={`${base}${scheduleMap.s.url}`}
+                        style={imageStyle}
+                        alt="Расписание студентов"
+                    />
+                </div>
+            );
+            portraitSlides.push(
+                <div key="slide-news-s" style={newsSlideStyle}>
+                    {getNewsChunk(0)}
+                </div>
+            );
+        }
+
+        if (scheduleMap.p) {
+            portraitSlides.push(
+                <div key="slide-schedule-p" style={slideStyle}>
+                    <h3>Преподаватели</h3>
+                    <img
+                        src={`${base}${scheduleMap.p.url}`}
+                        style={imageStyle}
+                        alt="Расписание преподавателей"
+                    />
+                </div>
+            );
+            portraitSlides.push(
+                <div key="slide-news-p" style={newsSlideStyle}>
+                    {getNewsChunk(3)}
+                </div>
+            );
+        }
+
+        if (scheduleMap.z) {
+            portraitSlides.push(
+                <div key="slide-schedule-z" style={slideStyle}>
+                    <h3>Заочники</h3>
+                    <img
+                        src={`${base}${scheduleMap.z.url}`}
+                        style={imageStyle}
+                        alt="Расписание заочников"
+                    />
+                </div>
+            );
+            portraitSlides.push(
+                <div key="slide-news-z" style={newsSlideStyle}>
+                    {getNewsChunk(6)}
+                </div>
+            );
+        }
+
+        return (
+            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ flexShrink: 0 }}>
+                    <TimeHeader />
+                </div>
+                <div style={{ flexGrow: 1 }}>
+                    <Carousel
+                        autoplay
+                        dots={false}
+                        effect="scrollx"
+                        style={{ height: '100%' }}
+                    >
+                        {portraitSlides}
+                    </Carousel>
+                </div>
             </div>
         );
     }
 
+
+
     return (
         <div>
             <TimeHeader />
-            <Row gutter={16} style={{ height: '90vh' }}>
-                <Col span={12}>
+            <div style={{ 
+                display: 'flex',
+                position: 'relative',
+                marginLeft: '-14vw',
+                marginRight: '-10vw',
+                height: '90vh', 
+                width: '100%', 
+                maxWidth: '90vw',
+                padding: 0, 
+                gap: 0
+                }}
+                >
+                <Col span={15} style={{ padding: 0 }}>
                     {scheduleError ? (
                         <Alert
                             message="Ошибка"
@@ -94,7 +184,7 @@ const MainCarouselLayout: React.FC<{ isPortrait: boolean }> = ({ isPortrait }) =
                     )}
                 </Col>
 
-                <Col span={12}>
+                <Col span={20} style={{ padding: 0 }}>
                     {newsError ? (
                         <Alert
                             message="Ошибка"
@@ -112,7 +202,18 @@ const MainCarouselLayout: React.FC<{ isPortrait: boolean }> = ({ isPortrait }) =
                     ) : (
                         <Carousel autoplay autoplaySpeed={5000} effect="fade">
                             {chunkedNews.map((group, index) => (
-                                <div key={index} style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div key={index} style={{
+                                    height: '100vh',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '100vw', // 🟢 Увеличиваем ширину слайда новостей
+                                    margin: 0,
+                                    gap: '1rem',
+                                    padding: '1rem',
+                                    boxSizing: 'border-box',
+                                }}>
                                     {group.map((n, i) => (
                                         <New key={i} title={n.title} small_text={n.small_text} images={n.images} />
                                     ))}
@@ -121,7 +222,7 @@ const MainCarouselLayout: React.FC<{ isPortrait: boolean }> = ({ isPortrait }) =
                         </Carousel>
                     )}
                 </Col>
-            </Row>
+            </div>
         </div>
     );
 };

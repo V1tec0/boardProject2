@@ -244,6 +244,7 @@ const Overlay: React.FC = () => {
 
         socket.onopen = () => {
             console.log('WebSocket connected');
+            message.success('WebSocket connected')
         };
 
         socket.onmessage = (event) => {
@@ -270,7 +271,8 @@ const Overlay: React.FC = () => {
                 } else if (data.type === 'reload') {
                     window.location.reload();
                 } else if(data.type === 'delete') {
-                    console.log('qwe')
+                    console.log(data);
+                    
                     const token = localStorage.getItem('token')
                     if(token === data.client) {
                         localStorage.clear()
@@ -279,11 +281,18 @@ const Overlay: React.FC = () => {
                 }
             } catch (err) {
                 console.error('Ошибка обработки сообщения:', err);
+                message.error(`Ошибка обработки сообщения: ${err}`);
             }
         };
 
-        socket.onerror = () => console.error('WebSocket error');
-        socket.onclose = () => console.error('WebSocket closed');
+        socket.onerror = () => {
+            console.error('WebSocket error');
+            message.error('WebSocket error')
+        }
+        socket.onclose = () => {
+            console.error('WebSocket closed');
+            message.warning('WebSocket closed')
+        }
 
         return () => {
             socket.close();

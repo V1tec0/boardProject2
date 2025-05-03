@@ -23,15 +23,8 @@ interface UserType {
     id: number;
 }
 
-type UsersProps = {
-    user: {
-        email: string;
-        is_admin: boolean;
-        id: number;
-    };
-};
 
-const Users: React.FC<UsersProps> = () => {
+const Users: React.FC = () => {
     const [users, setUsers] = useState<UserType[]>([]);
     const [editingUser, setEditingUser] = useState<UserType | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -99,7 +92,7 @@ const Users: React.FC<UsersProps> = () => {
         try {
             const xcsrfToken = await getCsrfToken()
             const values = await form.validateFields();
-            
+
             // Формируем только измененные поля
             const changedFields = {
                 firstname: values.firstname !== editingUser?.firstname ? values.firstname : undefined,
@@ -109,27 +102,27 @@ const Users: React.FC<UsersProps> = () => {
                 is_admin: values.is_admin !== editingUser?.is_admin ? values.is_admin : undefined,
                 // Добавьте другие поля по аналогии
             };
-    
+
             // Отправляем только измененные данные
             const response = await fetch(
-                `http://localhost:8000/api/admin/users/${editingUser?.id}/`, 
+                `http://localhost:8000/api/admin/users/${editingUser?.id}/`,
                 {
                     method: 'PATCH',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': xcsrfToken || null
-                     },
+                    },
                     credentials: 'include',
                     body: JSON.stringify(changedFields),
                 }
             );
 
-            if(response.ok) {
+            if (response.ok) {
                 antdMessage.success('Данные изменены успешно!')
             }
         } catch {
             antdMessage.error('Ошибка сохранения');
-        } 
+        }
         window.location.reload()
     };
 
@@ -152,19 +145,31 @@ const Users: React.FC<UsersProps> = () => {
         {
             title: 'Действия',
             key: 'actions',
-            render: (_, record) => (
-                <>
-                    <Button onClick={() => handleEdit(record)}>Редактировать</Button>
-                    <Popconfirm
-                        title="Удалить пользователя?"
-                        onConfirm={() => handleDelete(record.id)}
-                    >
-                        <Button danger style={{ marginLeft: 8 }}>Удалить</Button>
-                    </Popconfirm>
-                </>
-            ),
+            render: (_, record) => {
+                const isCurrentUser = record.email === user.email;
+                return (
+                    <>
+                        {isCurrentUser ? (
+                            <Button type="primary" onClick={() => window.location.href = '/settings'}>
+                                Редактировать
+                            </Button>
+                        ) : (
+                            <>
+                                <Button onClick={() => handleEdit(record)}>Редактировать</Button>
+                                <Popconfirm
+                                    title="Удалить пользователя?"
+                                    onConfirm={() => handleDelete(record.id)}
+                                >
+                                    <Button danger style={{ marginLeft: 8 }}>Удалить</Button>
+                                </Popconfirm>
+                            </>
+                        )}
+                    </>
+                );
+            },
         },
     ];
+
 
     return (
         <div>
@@ -175,8 +180,10 @@ const Users: React.FC<UsersProps> = () => {
                 dataSource={users}
                 rowKey="id"
                 bordered
+                rowClassName={(record) => record.email === user.email ? 'current-user-row' : ''}
                 style={{ marginTop: 24 }}
             />
+
 
             <Modal
                 title="Редактирование пользователя"

@@ -119,6 +119,55 @@ class MaufkParser:
 
         return news_items
 
+def send_message_logic(pk, show_at, duration):
+    from channels.layers import get_channel_layer
+    from asgiref.sync import async_to_sync
+    from .models import Message
+
+    print(f'Запуск логики отправки сообщения: {pk}, {show_at=}, {duration=}')
+
+    msg = Message.objects.get(pk_message=pk)
+    msg.isshowing = True
+    msg.save()
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "websocket_group",
+        {
+            "type": "send.message",
+            "pk_message": msg.pk_message,
+            "text": msg.text,
+            "isprimary": msg.isprimary,
+        }
+    )
+
+    async_to_sync(channel_layer.group_send)(
+        "websocket_group",
+        {
+            "type": "message_status",
+            "pk_message": msg.pk_message,
+            "isshowing": True
+        }
+    )
+
+    if duration:
+        import threading
+        def hide_later():
+            import time
+            time.sleep(duration)
+            msg.isshowing = False
+            msg.save()
+            async_to_sync(channel_layer.group_send)(
+                "websocket_group",
+                {
+                    "type": "message_status",
+                    "pk_message": msg.pk_message,
+                    "isshowing": False
+                }
+            )
+        threading.Thread(target=hide_later).start()
+
+
 def send_email(recepient_email, email_url, subject, template):
     # subject = 'Активация с сайта ' + settings.SITE_NAME
     from_email = settings.EMAIL_HOST_USER

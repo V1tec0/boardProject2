@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Message, News, Image, User, DisplayedNews, BellTemplate, BellSchedule, Video, Client
+from api.models import Message, News, Image, User, DisplayedNews, BellTemplate, BellSchedule, Video, Client, LogEntry
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -74,6 +74,16 @@ class DisplayedNewsSerializer(serializers.ModelSerializer):
         model = DisplayedNews
         fields = ['news', 'created_at']
 
+class LogEntrySerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LogEntry
+        fields = '__all__'
+
+    def get_user(self, obj):
+        return obj.user.email if obj.user else None
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True, required=False)
@@ -100,6 +110,10 @@ class UserSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_email(self, value):
+        request = self.context.get('request', None)
+        if request and request.user and request.user.email == value:
+            return value  # email не изменился — валидно
+
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError('Пользователь с таким email уже существует!')
         return value

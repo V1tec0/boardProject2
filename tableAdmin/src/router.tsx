@@ -7,9 +7,11 @@ import Messages from './components/Messages/Messages'
 import Settings from './components/Settings'
 import MainPage from './components/MainPage'
 import Users from './components/Users'
+import { ReactNode } from 'react'
+import LogsPage from './components/LogsPage'
 // import ProtectedRoute from './ProtectedRouter'
 
-const ProtectedRoute = ({ children, isAdmin = false }) => {
+const ProtectedRoute = ({ children, isAdmin = false }: {children: ReactNode, isAdmin?: boolean}) => {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     const location = useLocation();
   
@@ -83,6 +85,13 @@ const router = createBrowserRouter([
                 handle: {
                     showAuthModal: true // Кастомный флаг
                 }
+            },
+            {
+                path: 'logs',
+                element: 
+                    <ProtectedRoute>
+                        <LogsPage />
+                    </ProtectedRoute>
             }
         ]
     }

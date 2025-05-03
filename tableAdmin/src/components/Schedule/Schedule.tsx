@@ -60,7 +60,7 @@ const Schedule: React.FC = () => {
                                         key={`${schedule.date}_${schedule.type}`}
                                         type={schedule.type}
                                         date={schedule.date}
-                                        url={'http://localhost:8000' + schedule.url}
+                                        url={import.meta.env.VITE_HOST + schedule.url}
                                         onUpdate={mutate}
                                     />
                                 ))
