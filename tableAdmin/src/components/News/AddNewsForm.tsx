@@ -35,12 +35,12 @@ const AddNewsModal = ({ open, onClose }) => {
             formData.append('file_text', values.textFile?.file);
         }
 
-        fileList.forEach((file, index) => {
-            formData.append(`images[${index}]`, file.originFileObj as File);
-        });
-
+        if (fileList.length > 0) {
+            formData.append('image', fileList[0].originFileObj as File);
+        }
+ 
         try {
-            const csrfresponse = await fetch('http://localhost:8000/api/csrf/', {
+            const csrfresponse = await fetch(`${import.meta.env.VITE_API_URL}csrf/`, {
                 credentials: 'include',
             });
             console.log(csrfresponse)
@@ -50,7 +50,7 @@ const AddNewsModal = ({ open, onClose }) => {
             const sessionid = getCookie('sessionid')
             const csrfToken = getCookie('csrftoken')
 
-            const response = await fetch('http://localhost:8000/api/news/', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}news/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': xcsrfToken,
@@ -142,10 +142,18 @@ const AddNewsModal = ({ open, onClose }) => {
                     <Upload
                         listType="picture-card"
                         fileList={fileList}
-                        onChange={({ fileList }) => setFileList(fileList)}
-                        beforeUpload={() => false}
-                        multiple
+                        onChange={({ fileList }) => setFileList(fileList.slice(-1))} // ← оставить только один
+                        beforeUpload={(file) => {
+                            const isImage = file.type.startsWith('image/');
+                            if (!isImage) {
+                                message.error('Можно загружать только изображения');
+                            }
+                            return false;
+                        }}
+                        accept="image/*"
+                        maxCount={1}
                     >
+
                         <div>
                             <PlusOutlined />
                             <div style={{ marginTop: 8 }}>Загрузить</div>

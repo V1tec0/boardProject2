@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Message, News, Image, User, DisplayedNews, BellTemplate, BellSchedule, Video, Client, LogEntry
+from api.models import Message, News, User, BellTemplate, BellSchedule, Client, LogEntry
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -19,41 +19,34 @@ class MessageSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
-class ImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Image
-        fields = ['pk_image', 'title', 'image_url']
-
-    image_url = serializers.SerializerMethodField()
-
-    def get_image_url(self, obj):
-        # Получаем абсолютный URL изображения
-        request = self.context.get('request')
-        if obj.title and request:
-            return request.build_absolute_uri(f'/media/news/{obj.title}')
-        return None
-
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
         fields = ['pk_client', 'name', 'token', 'floor', 'building']
 
 class NewsSerializer(serializers.ModelSerializer):
-    images = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = News
-        fields = ['pk_news', 'title', 'small_text', 'main_text', 'images']
+        fields = [
+            'pk_news',
+            'title',
+            'small_text',
+            'main_text',
+            'image',
+            'image_url',
+            'is_displayed',
+            'display_order',
+            'created_at'
+        ]
 
-    def get_images(self, obj):
-        # Вручную получаем связанные изображения
-        images = Image.objects.filter(fk_news=obj.pk_news)
-        return ImageSerializer(
-            images,
-            many=True,
-            context={'request': self.context.get('request')}
-        ).data
+    def get_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        return None
+
 
     def create(self, validated_data):
         news = News.objects.create(title=validated_data.get('title'), small_text=validated_data.get('small_text'), main_text=validated_data.get('main_text'))
@@ -66,13 +59,6 @@ class NewsSerializer(serializers.ModelSerializer):
         instance.main_text = validated_data.get('main_text', instance.main_text)
         instance.save()
         return instance
-
-class DisplayedNewsSerializer(serializers.ModelSerializer):
-    news = NewsSerializer(source='fk_news', read_only=True)
-
-    class Meta:
-        model = DisplayedNews
-        fields = ['news', 'created_at']
 
 class LogEntrySerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
@@ -137,18 +123,6 @@ class UserSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-
-class VideoSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Video
-        fields = ['pk_video', 'title', 'description', 'file', 'file_url', 'uploaded_at']
-
-    def get_file_url(self, obj):
-        request = self.context.get('request')
-        return request.build_absolute_uri(obj.file.url) if obj.file else None
-
 
 class BellTemplateSerializer(serializers.ModelSerializer):
     class Meta:

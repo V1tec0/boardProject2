@@ -89,27 +89,30 @@ const Messages: React.FC = () => {
     };
 
 
-    const onClickMessage = async (id: number) => {
-        if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-            message.error('Соединение с сервером не установлено');
-            return;
-        }
+    const onClickMessage = (id: number) => {
+        const message = messagesData.find((m) => m.pk_message === id);
+        if (!message || !socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) return;
 
-        console.log('Отправка сообщения через WS:', {
-            type: 'send_message',
-            message_id: id,
-            show_at: null,
-            duration: null
-        });
-
+        const newAction = message.isshowing ? 'hide' : 'show';
 
         socketRef.current.send(JSON.stringify({
             type: 'send_message',
             message_id: id,
-            show_at: null,          // немедленный показ
-            duration: null          // без ограничения
+            action: newAction,
+            show_at: null,
+            duration: null
         }));
+
+        // Обновляем локальное состояние мгновенно
+        mutate((prevMessages: any[]) =>
+            prevMessages.map(m =>
+                m.pk_message === id
+                    ? { ...m, isshowing: newAction === 'show' }
+                    : m
+            ), false);
     };
+
+
 
     const onDelete = async (id: number) => {
         const csrfresponse = await fetch('http://localhost:8000/api/csrf/', {
@@ -199,6 +202,7 @@ const Messages: React.FC = () => {
                 visible={sendModalVisible}
                 messageId={sendMessageId}
                 target={sendTarget}
+                isshowing
                 onCancel={() => setSendModalVisible(false)}
                 onSend={(data) => {
                     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
@@ -206,15 +210,27 @@ const Messages: React.FC = () => {
                         return;
                     }
 
+                    const message = messagesData.find((m) => m.pk_message === data.messageId);
+                    const newAction = message?.isshowing ? 'hide' : 'show';
+
                     socketRef.current.send(JSON.stringify({
                         type: 'send_message',
                         message_id: data.messageId,
+                        action: newAction,
                         show_at: data.showAt,
                         duration: data.duration ?? null
                     }));
 
+                    mutate((prevMessages: any[]) =>
+                        prevMessages.map(m =>
+                            m.pk_message === data.messageId
+                                ? { ...m, isshowing: newAction === 'show' }
+                                : m
+                        ), false);
+
                     setSendModalVisible(false);
                 }}
+
             />
 
         </div >

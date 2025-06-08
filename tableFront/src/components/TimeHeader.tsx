@@ -1,42 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import moment from 'moment-timezone';
+import { DateTime } from 'luxon';
 
 const TimeHeader: React.FC = () => {
     const [currentTime, setCurrentTime] = useState(
-        moment().tz('Europe/Moscow').format('HH:mm:ss')
+        DateTime.now().setZone('Europe/Moscow').setLocale('ru')
     );
 
     useEffect(() => {
-        // Функция для синхронизации с началом новой секунды
         const syncWithSecond = () => {
-            const now = moment().tz('Europe/Moscow');
-            const millisToNextSecond = 1000 - now.milliseconds();
+            const now = DateTime.now().setZone('Europe/Moscow');
+            const millisToNextSecond = 1000 - now.millisecond;
 
-            // Устанавливаем таймер, который сработает точно в начале следующей секунды
             setTimeout(() => {
-                // Устанавливаем текущее время
-                setCurrentTime(moment().tz('Europe/Moscow').format('HH:mm:ss'));
+                setCurrentTime(DateTime.now().setZone('Europe/Moscow').setLocale('ru'));
 
-                // Запускаем интервал точно с начала секунды
                 const interval = setInterval(() => {
-                    setCurrentTime(moment().tz('Europe/Moscow').format('HH:mm:ss'));
+                    setCurrentTime(DateTime.now().setZone('Europe/Moscow').setLocale('ru'));
                 }, 1000);
 
-                // Очистка интервала при размонтировании компонента
                 return () => clearInterval(interval);
             }, millisToNextSecond);
         };
 
-        // Вызываем функцию синхронизации
         syncWithSecond();
-
-        // Устанавливаем текущее время сразу при монтировании
-        setCurrentTime(moment().tz('Europe/Moscow').format('HH:mm:ss'));
+        setCurrentTime(DateTime.now().setZone('Europe/Moscow').setLocale('ru'));
     }, []);
+
+    // Формируем красивую строку
+    const formatted = currentTime.toFormat("cccc, d LLLL yyyy, HH:mm:ss");
+
+    // Делаем первую букву дня недели и месяца заглавной
+    const capitalized = formatted.replace(/^\w/, c => c.toUpperCase())
+        .replace(/,\s(\d+)\s(\p{Ll}+)/u, (_, day, month) => `, ${day} ${month[0].toUpperCase()}${month.slice(1)}`);
 
     return (
         <div style={{ textAlign: 'center', fontSize: '2rem', margin: 0 }}>
-            {currentTime}
+            Сегодня {capitalized}
         </div>
     );
 };

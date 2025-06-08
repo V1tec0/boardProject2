@@ -10,13 +10,15 @@ type Props = {
         target: 'all' | 'client';
         showAt: string | null;
         duration: number;
+        isshowing: boolean
         interruptible: boolean;
     }) => void;
     messageId: number | null;
     target: 'all' | 'client';
+    isshowing: boolean;
 };
 
-export default function SendMessageModal({ visible, onCancel, onSend, messageId, target }: Props) {
+export default function SendMessageModal({ visible, onCancel, onSend, messageId, target, isshowing }: Props) {
     const [form] = Form.useForm();
 
     useEffect(() => {
@@ -35,8 +37,9 @@ export default function SendMessageModal({ visible, onCancel, onSend, messageId,
             const result = {
                 messageId: messageId!,
                 target,
-                showAt: values.showMode === 'now' ? null : values.startAt.format('YYYY-MM-DDTHH:mm:ss'),
+                showAt: values.showMode === 'now' ? null : values.startAt.format('HH:mm:ss'),
                 duration: finalDuration,
+                isshowing,
                 interruptible: values.interruptible
             };
 
@@ -73,7 +76,7 @@ export default function SendMessageModal({ visible, onCancel, onSend, messageId,
                             >
                                 <TimePicker
                                     style={{width: '50%'}}
-                                    format="HH:mm"
+                                    format="HH:mm:ss"
                                 />
                             </Form.Item>
                         )

@@ -4,11 +4,6 @@ export type IMessage = {
     isprimary: boolean
 }
 
-export interface ImageProps {
-    pk_image: number;
-    title: string;
-}
-
 
 export type IData = {
     pk_client: number
@@ -22,7 +17,7 @@ export interface NewsItem {
     title: string;
     small_text: string;
     main_text: string;
-    images: ImageProps[];
+    image: string;
 }
 
 export interface INews {

@@ -41,13 +41,9 @@ export default function NewsCard({
                     <p key={i}>{line}</p>
                 ))}
             </div>
-            {news.images.length > 0 && (
-                <div className="news-images">
-                    {news.images.map((img, i) => (
-                        <img key={i} src={`${import.meta.env.VITE_MEDIA_URL}news/` + img.title} alt={`Image ${i}`} />
-                    ))}
-                </div>
-            )}
+            <div className="news-images">
+                <img src={news.image} />
+            </div>
             {isAvailable && (
                 <button
                     className="delete-btn"

@@ -8,7 +8,8 @@ export interface NewsItem {
     pk_news: number;
     title: string;
     small_text: string;
-    images: string[];
+    image: string;
+    is_displayed: boolean
 }
 
 export interface Columns {

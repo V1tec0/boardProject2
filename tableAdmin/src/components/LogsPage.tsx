@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Table, Tag } from 'antd';
+import { Table, Tag, Typography } from 'antd';
+
+const { Title } = Typography
 
 export default function LogsPage() {
     const [logs, setLogs] = useState([]);
@@ -45,14 +47,15 @@ export default function LogsPage() {
     ];
 
     return (
-        <div style={{ padding: 24 }}>
-            <h2 style={{ marginBottom: 16 }}>Журнал действий</h2>
+        <div>
+            <Title level={1}>Журнал действий</Title>
             <Table
                 rowKey="id"
                 columns={columns}
                 dataSource={logs}
                 pagination={{ pageSize: 20 }}
                 bordered
+                style={{ padding: 24 }} 
             />
         </div>
     );

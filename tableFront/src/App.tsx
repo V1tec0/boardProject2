@@ -16,7 +16,8 @@ function App() {
     const [connected, setConnected] = useState('')
     const isPortrait = useOrientation();
 
-    console.log(import.meta.env.VITE_BASE_URL_EXTRA, ' - EXTRA');
+    console.log(connected);
+    
 
     useEffect(() => {
         const backgroundImage = isPortrait ? vertical : horizontal;
@@ -25,14 +26,12 @@ function App() {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        console.log(token);
 
         fetch(`${import.meta.env.VITE_API_URL}client/?token=${token}`, {
             method: 'GET'
         })
             .then(res => res.json())
-            .then(data => {
-                console.log(data);
+            .then(() => {
                 setIsRegistered(true);
             })
             .catch(() => {
@@ -70,8 +69,6 @@ function App() {
             clearInterval(pingInterval);
         };
     }, []);
-
-    console.log(connected)
 
     const handleRegister = () => {
         setShowRegistrationModal(true);

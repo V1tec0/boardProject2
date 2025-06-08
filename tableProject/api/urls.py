@@ -3,7 +3,8 @@ from django.urls import path
 from api.views import NewsView, ScheduleView, NewsListView, MessageListView, MessageView, SessionView, \
     ActivateView, CSRFToken, UserView, ResetPasswordView, \
     UpdateDisplayedNewsView, GetDisplayedNewsView, ParsedNewsView, UsersView, AdminUserView, BellTemplateListView, \
-    SwitchActiveTemplateView, ActiveScheduleView, BellScheduleView, VideoView, ClientView, LogEntryListView
+    SwitchActiveTemplateView, ActiveScheduleView, BellScheduleView, ClientView, LogEntryListView, \
+    ChangeBackgroundView, MediaBroadcastView
 
 urlpatterns = [
     path('news/', NewsListView.as_view(), name='news'),
@@ -25,8 +26,10 @@ urlpatterns = [
     path('switch-template/', SwitchActiveTemplateView.as_view(), name='switch-template'),
     path('active-schedule/', ActiveScheduleView.as_view(), name='active-schedule'),
     path('bell-schedules/', BellScheduleView.as_view(), name='bell-schedules'),
-    path('videos/', VideoView.as_view(), name='videos'),
     path('bell-schedules/<int:schedule_id>/', BellScheduleView.as_view(), name='bell-schedule-detail'),
     path('client/', ClientView.as_view(), name='client'),
     path('logs/', LogEntryListView.as_view(), name='log-list'),
+    path('change-background/', ChangeBackgroundView.as_view(), name='change-background'),
+    path('media-broadcast/', MediaBroadcastView.as_view(), name='media-broadcast'),
+
 ]

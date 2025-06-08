@@ -3,7 +3,9 @@ import os, datetime, uuid, textract, tempfile, urllib3
 import random
 from mimetypes import guess_extension
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
+from PIL import UnidentifiedImageError, Image
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 from django.core.files.storage import default_storage
@@ -25,15 +27,16 @@ from django.db import transaction
 from django.core.cache import cache
 from rest_framework import status
 from rest_framework.generics import ListAPIView
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-from api.models import Message, News, Image, User, DisplayedNews, BellSchedule, BellTemplate, Video, Client, LogEntry
-from api.serializers import MessageSerializer, NewsSerializer, UserSerializer, DisplayedNewsSerializer, \
-    BellScheduleSerializer, BellTemplateSerializer, VideoSerializer, ClientSerializer, LogEntrySerializer
+from api.models import Message, News, User, BellSchedule, BellTemplate, Client, LogEntry
+from api.serializers import MessageSerializer, NewsSerializer, UserSerializer, \
+    BellScheduleSerializer, BellTemplateSerializer, ClientSerializer, LogEntrySerializer
 from api.utils import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -84,7 +87,7 @@ class MessageView(APIView):
                     return Response({"status": "Перезагрузка отправлена"}, status=status.HTTP_200_OK)
 
                 elif id_message == 'lesson':
-                    message = self.get_object(22)
+                    message = self.get_object(4)
                     action = 'show' if message.isshowing == 1 else 'hide'
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.group_send)(
@@ -102,7 +105,7 @@ class MessageView(APIView):
                     return Response({"status": "Звонок на урок"}, status=status.HTTP_200_OK)
 
                 elif id_message == 'break':
-                    message = self.get_object(21)
+                    message = self.get_object(3)
                     action = 'show' if message.isshowing == 1 else 'hide'
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.group_send)(
@@ -191,6 +194,9 @@ class MessageView(APIView):
     def delete(self, request, id_message):
         if not request.user.is_authenticated:
             return Response({'detail': 'User is not authorized.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if id_message == '3' or id_message == '4':
+            return Response({'detail': 'Forbidden to delete'}, status=status.HTTP_403_FORBIDDEN)
 
         message = self.get_object(id_message)
 
@@ -313,34 +319,15 @@ class NewsListView(APIView):
                 news = serializer.save()
 
                 # Обработка изображений
-                images = [file for key, file in request.FILES.items() if key.startswith('images[')]
-                responses = []
+                image = request.FILES.get('image')
+                if image:
+                    if not image.content_type.startswith('image/'):
+                        return JsonResponse({'error': 'Можно загружать только изображения'}, status=400)
 
-                for uploaded_file in images:
-                    try:
-                        file_extension = guess_extension(uploaded_file.content_type) or ".bin"
-                        file_name = f"{news.pk_news}_{uuid.uuid4().hex[:8]}{file_extension}"
-                        file_path = os.path.join(settings.MEDIA_ROOT, 'news', file_name)
+                    extension = os.path.splitext(image.name)[-1]  # сохраняем оригинальное расширение
+                    filename = f"news_{news.pk_news}{extension}"
 
-                        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-                        # Сохранение файла
-                        with open(file_path, 'wb+') as destination:
-                            for chunk in uploaded_file.chunks():
-                                destination.write(chunk)
-
-                        Image.objects.create(fk_news=news, title=file_name)
-
-                        responses.append({
-                            "file": uploaded_file.name,
-                            "message": "Image uploaded successfully",
-                            "title": file_name
-                        })
-                    except Exception as e:
-                        responses.append({
-                            "file": uploaded_file.name,
-                            "error": f"Failed to save image: {str(e)}"
-                        })
+                    news.image.save(filename, image, save=True)
 
                 # Возвращаем успешный ответ
                 return Response({'detail':"Новость добавлена успешно."}, status=status.HTTP_201_CREATED)
@@ -357,25 +344,25 @@ class UpdateDisplayedNewsView(APIView):
         try:
             with transaction.atomic():
                 # Delete old entries
-                DisplayedNews.objects.all().delete()
+                # Сбрасываем старые флаги
+                News.objects.update(is_displayed=False, display_order=None)
 
-                # Add new ones with order
-                new_displayed = []
+                # Устанавливаем новые
                 for index, news_id in enumerate(news_ids):
                     try:
                         news = News.objects.get(pk=news_id)
-                        displayed_news = DisplayedNews.objects.create(
-                            fk_news=news,
-                            created_at=timezone.now(),
-                            display_order=index  # используем индекс как порядок
-                        )
-                        new_displayed.append(displayed_news)
+                        news.is_displayed = True
+                        news.display_order = index
+                        news.save()
                     except News.DoesNotExist:
                         continue
 
                 # Notify connected clients through WebSocket
                 channel_layer = get_channel_layer()
-                serialized_data = DisplayedNewsSerializer(new_displayed, many=True).data
+                serialized_data = NewsSerializer(
+                    News.objects.filter(is_displayed=True).order_by('display_order'),
+                    many=True, context={'request': request}
+                ).data
 
                 async_to_sync(channel_layer.group_send)(
                     "news_updates",
@@ -397,8 +384,8 @@ class GetDisplayedNewsView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        displayed_news = DisplayedNews.objects.select_related('fk_news').all().order_by('display_order')
-        serializer = DisplayedNewsSerializer(displayed_news, many=True)
+        news = News.objects.filter(is_displayed=True).order_by('display_order')
+        serializer = NewsSerializer(news, many=True, context={'request': request})
         return Response(serializer.data)
 
 
@@ -437,11 +424,10 @@ class NewsView(APIView):
 
     def delete(self, request, id_news):
         news = News.objects.get(pk=id_news)
-        images = Image.objects.filter(fk_news=news)
-        for image in images:
-            image.delete()
-            file_path = os.path.join(settings.MEDIA_ROOT, 'news', image.title)
-            os.remove(file_path)
+        if news.image:
+            file_path = os.path.join(settings.MEDIA_ROOT, news.image.name)
+            if os.path.exists(file_path):
+                os.remove(file_path)
         news.delete()
         return Response({'detail':"Новость удалена успешно."}, status=status.HTTP_204_NO_CONTENT)
 
@@ -762,23 +748,76 @@ class BellScheduleView(APIView):
         schedule.delete()
         return Response({"detail": "Звонок удалён"}, status=status.HTTP_204_NO_CONTENT)
 
-class VideoView(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        videos = Video.objects.all().order_by('-uploaded_at')
-        serializer = VideoSerializer(videos, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class MediaBroadcastView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [AllowAny]  # Меняй при необходимости
 
     def post(self, request):
-        if not request.user.is_authenticated:
-            return Response({'detail': 'User is not authorized!'}, status=status.HTTP_401_UNAUTHORIZED)
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'Файл обязателен'}, status=400)
 
-        serializer = VideoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'detail': 'Видео загружено успешно'}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Проверка MIME-типа
+        content_type = file.content_type
+        if not (content_type.startswith('image/') or content_type.startswith('video/')):
+            return Response({'error': 'Допустимы только изображения и видео'}, status=400)
+
+        # Генерация пути
+        ext = file.name.split('.')[-1].lower()
+        media_type = 'images' if content_type.startswith('image/') else 'videos'
+        filename = f"{uuid.uuid4()}.{ext}"
+        relative_path = os.path.join(media_type, filename)
+
+        # Сохраняем файл
+        saved_path = default_storage.save(relative_path, file)
+        media_url = request.build_absolute_uri(default_storage.url(saved_path))
+        cache.set(f"current_media_{media_type}", media_url, timeout=None)
+        print(media_type)
+
+        # WebSocket-рассылка
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "websocket_group",
+            {
+                "type": "media.broadcast",
+                "media_url": media_url,
+                "media_type": "image" if content_type.startswith('image/') else "video"
+            }
+        )
+
+        return Response({"status": "OK", "url": media_url}, status=200)
+
+    def delete(self, request):
+        channel_layer = get_channel_layer()
+
+        media_type = request.data.get("media_type")
+        if media_type not in ["images", "videos"]:
+            return Response({"error": "Неверный тип медиа"}, status=400)
+
+        cache_key = f"current_media_{media_type}"
+        media_url = cache.get(cache_key)
+        print(media_url)
+
+        if media_url:
+            parsed = urlparse(media_url)
+            relative_path = parsed.path.replace(settings.MEDIA_URL, "").lstrip("/")
+            if default_storage.exists(relative_path):
+                default_storage.delete(relative_path)
+            cache.delete(cache_key)
+
+        # Отправляем команду скрытия
+        async_to_sync(channel_layer.group_send)(
+            "websocket_group",
+            {
+                "type": "media_hide",
+                "media_url": None,
+                "media_type": media_type,
+                "action": "hide"
+            }
+        )
+
+        return Response({"status": f"{media_type} скрыто и удалено"}, status=200)
+
 
 class ClientView(APIView):
     permission_classes = [AllowAny]
@@ -820,6 +859,74 @@ class ClientView(APIView):
         )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ChangeBackgroundView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        channel_layer = get_channel_layer()
+
+        # Загрузка по ориентации
+        orientation = request.data.get("orientation")
+        if orientation not in ["horizontal", "vertical"]:
+            return Response({"error": "Ориентация обязательна"}, status=400)
+
+        image_file = request.FILES.get("image")
+        if not image_file:
+            return Response({"error": "Файл обязателен"}, status=400)
+
+        try:
+            img = Image.open(image_file)
+            img.verify()
+        except UnidentifiedImageError:
+            return Response({"error": "Неверное изображение"}, status=400)
+
+        filename = f"{uuid.uuid4()}.{image_file.name.split('.')[-1]}"
+        path = os.path.join("backgrounds", orientation, filename)
+        saved_path = default_storage.save(path, image_file)
+        image_url = request.build_absolute_uri(default_storage.url(saved_path))
+
+        cache.set(f"background_{orientation}", image_url, timeout=None)
+
+        async_to_sync(channel_layer.group_send)(
+            "websocket_group",
+            {
+                "type": "change.background",
+                "image_url": image_url,
+                "orientation": orientation,
+            }
+        )
+
+        return Response({"status": f"Фон для {orientation} установлен", "url": image_url}, status=200)
+
+    def delete(self, request):
+        reset = request.data.get("reset")
+        channel_layer = get_channel_layer()
+
+        if reset:
+
+            for orientation in ["horizontal", "vertical"]:
+                url = cache.get(f"background_{orientation}")
+                if url:
+                    # Преобразуем абсолютный URL в относительный путь
+                    parsed = urlparse(url)
+                    relative_path = parsed.path.replace(settings.MEDIA_URL, "").lstrip("/")
+                    print("Удаляем:", relative_path)
+                    if default_storage.exists(relative_path):
+                        default_storage.delete(relative_path)
+                cache.delete(f"background_{orientation}")
+
+                async_to_sync(channel_layer.group_send)(
+                    "websocket_group",
+                    {
+                        "type": "change.background",
+                        "image_url": None,
+                        "orientation": orientation,
+                    }
+                )
+
+            return Response({"status": "Оба фона сброшены"}, status=200)
 
 class LogEntryListView(ListAPIView):
     queryset = LogEntry.objects.all().order_by('-timestamp')
@@ -1064,4 +1171,3 @@ class ResetPasswordView(APIView):
             return Response({'detail': 'Пароль успешно изменён.'}, status=200)
 
         return Response({'detail': 'Неверный код сброса пароля.'}, status=400)
-

@@ -1,21 +1,8 @@
-import React, { useState } from 'react';
-import { Typography, Button, Radio, Space, Switch, Flex, Divider, Modal, Form, Input, message } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Typography, Button, Radio, Space, Divider, Modal, Form, Input, message } from 'antd';
 import { useOutletContext } from 'react-router-dom';
 
-
 const { Title } = Typography;
-
-const getCookie = (name: string): string | null => {
-    const cookies = document.cookie
-        .split(';')
-        .map(cookie => cookie.trim().split('='));
-
-    const targetCookie = cookies.find(([cookieName]) => cookieName === name);
-
-    return targetCookie
-        ? decodeURIComponent(targetCookie[1]) // Декодируем значение
-        : null;
-};
 
 const Settings: React.FC = () => {
     const [form] = Form.useForm();
@@ -25,8 +12,12 @@ const Settings: React.FC = () => {
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [passwordForm] = Form.useForm();
     const { handleLogout } = useOutletContext<{ handleLogout: () => void }>();
+    const socket = useRef<WebSocket | null>(null);
 
-
+    useEffect(() => {
+        socket.current = new WebSocket(`ws://localhost:8000/ws/msgs/`);
+        return () => socket.current?.close();
+    }, []);
 
     const handleEditFinish = async (values: any) => {
         try {
@@ -94,38 +85,16 @@ const Settings: React.FC = () => {
         }
     };
 
-
-
-
     const sendReloadCommand = async () => {
-        try {
-            const csrfresponse = await fetch('http://localhost:8000/api/csrf/', {
-                credentials: 'include',
-            });
-            console.log(csrfresponse)
-            const xcsrfToken = csrfresponse.headers.get('X-CSRFToken');
-            console.log(xcsrfToken)
-
-            const sessionid = getCookie('sessionid')
-            const csrfToken = getCookie('csrftoken')
-
-            const response = await fetch(`http://localhost:8000/api/messages/reload/`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': xcsrfToken,
-                    'Cookie': `csrftoken=${csrfToken}; sessionid=${sessionid}`
-                },
-                credentials: 'include'
-            });
-
-            console.log(response)
-
-            const data = await response.json();
-            console.log('Ответ сервера:', data);
-
-        } catch (error) {
-            console.error('Ошибка при отправке команды перезагрузки:', error);
+        if (!socket) {
+            message.error('Нет соединения с сервером');
+            return;
         }
+
+        socket.current?.send(JSON.stringify({ type: 'reload' }));
+
+
+        message.success('Команда перезагрузки отправлена');
     };
 
     const handlePositionChange = (e: any) => {

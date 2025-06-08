@@ -105,21 +105,10 @@ class BellTemplate(models.Model):
     is_active = models.BooleanField(default=False)  # Добавляем флаг активности
 
     class Meta:
-        managed = False
         db_table = 'bell_template'
 
     def __str__(self):
         return self.name
-
-class Video(models.Model):
-    pk_video = models.AutoField(primary_key=True)
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    file = models.FileField(upload_to='videos/')  # Хранение файлов в `media/videos`
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'video'
 
 class Client(models.Model):
     pk_client = models.AutoField(primary_key=True)
@@ -143,30 +132,10 @@ class BellSchedule(models.Model):
     active = models.BooleanField(default=True)
 
     class Meta:
-        managed = False
         db_table = 'bell_schedule'
 
     def __str__(self):
         return f"{self.get_bell_type_display()} в {self.scheduled_time}"
-
-class DisplayedNews(models.Model):
-    fk_news = models.OneToOneField('News', models.DO_NOTHING, db_column='fk_news', primary_key=True)
-    created_at = models.DateTimeField()
-    display_order = models.IntegerField()  # новое поле
-
-    class Meta:
-        managed = False
-        db_table = 'displayed_news'
-
-class Image(models.Model):
-    pk_image = models.AutoField(primary_key=True)
-    title = models.CharField(max_length=45)
-    fk_news = models.ForeignKey('News', models.DO_NOTHING, db_column='fk_news')
-
-    class Meta:
-        managed = False
-        db_table = 'image'
-
 
 class Message(models.Model):
     pk_message = models.AutoField(primary_key=True)
@@ -175,7 +144,6 @@ class Message(models.Model):
     isshowing = models.IntegerField(default=0)
 
     class Meta:
-        managed = False
         db_table = 'message'
 
 
@@ -184,7 +152,10 @@ class News(models.Model):
     title = models.CharField(max_length=255)
     small_text = models.TextField()
     main_text = models.TextField()
+    image = models.ImageField(upload_to='news/', blank=True, null=True)  # путь к одному изображению
+    is_displayed = models.BooleanField(default=False)  # заменяет DisplayedNews
+    display_order = models.IntegerField(null=True, blank=True)  # опционально: порядок отображения
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        managed = False
         db_table = 'news'

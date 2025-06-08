@@ -17,6 +17,8 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import AuthModal from './components/AuthModal';
 import { useWindowSize } from './hooks/useWindowSize';
 
+import Image from '/favicon.ico'
+
 
 const { Content } = Layout;
 
@@ -126,8 +128,8 @@ const App: React.FC = () => {
         background: 'var(--bg-color)',
         marginTop: ['top'].includes(dockPosition) ? 60 : 24, // Отступ сверху
         marginBottom: ['bottom'].includes(dockPosition) ? 60 : 24, // Отступ снизу
-        marginLeft: ['left'].includes(dockPosition) ? 80 : 24, // Отступ сбоку
-        marginRight: ['right'].includes(dockPosition) ? 80 : 24, // Отступ сбоку
+        marginLeft: ['left'].includes(dockPosition) ? 230 : 24, // Отступ сбоку
+        marginRight: ['right'].includes(dockPosition) ? 230 : 24, // Отступ сбоку
     };
 
     const positionStyles = {
@@ -342,6 +344,7 @@ const App: React.FC = () => {
                 gap: 12,
                 zIndex: 1000,
             }}>
+                <img src={Image} alt="logo" style={{ maxWidth: 50 }} onClick={() => navigate('/')} />
                 {menuItems.map(item => (
                     item.type === 'divider' ? (
                         <Divider type="vertical" key="divider" style={{ height: 24 }} />

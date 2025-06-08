@@ -191,6 +191,10 @@ const Overlay: React.FC = () => {
     const [messageModalVisible, setMessageModalVisible] = useState(false);
     const [bellModalVisible, setBellModalVisible] = useState(false);
     const processedBellTimes = useRef<Set<string>>(new Set());
+    const [mediaModalVisible, setMediaModalVisible] = useState(false);
+    const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+    const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+
 
     useEffect(() => {
         if (!isServerAlive) {
@@ -263,6 +267,14 @@ const Overlay: React.FC = () => {
                         isprimary: Boolean(data.data.isprimary),
                     });
                     setMessageModalVisible(true);
+
+                    const duration = data.data.duration;
+                    if (typeof duration === 'number' && duration > 0) {
+                        setTimeout(() => {
+                            setMessageModalVisible(false);
+                            setCurrentMessage(null);
+                        }, duration * 1000);
+                    }
                 } else if (data.type === 'control' && data.action === 'hide') {
                     if (currentMessage?.pk_message === data.pk_message) {
                         setMessageModalVisible(false);
@@ -270,15 +282,44 @@ const Overlay: React.FC = () => {
                     }
                 } else if (data.type === 'reload') {
                     window.location.reload();
-                } else if(data.type === 'delete') {
+                } else if (data.type === 'delete') {
                     console.log(data);
-                    
+
                     const token = localStorage.getItem('token')
-                    if(token === data.client) {
+                    if (token === data.client) {
                         localStorage.clear()
                         window.location.reload()
                     }
+                } else if (data.type === "background_change") {
+                    const imageUrl = data.image_url;
+                    const orientation = data.orientation;
+                    const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+
+                    if ((isPortrait && orientation === 'vertical') || (!isPortrait && orientation === 'horizontal')) {
+                        if (imageUrl) {
+                            document.body.style.backgroundImage = `url(${imageUrl})`;
+                            document.body.style.backgroundSize = "cover";
+                            document.body.style.backgroundPosition = "center";
+                        } else {
+                            document.body.style.backgroundImage = ``;
+                            window.location.reload()
+                        }
+                    }
+                } else if (data.type === 'media.broadcast') {
+                    if (data.media_url && data.media_type) {
+                        setMediaUrl(data.media_url);
+                        setMediaType(data.media_type);
+                        setMediaModalVisible(true);
+                    }
+                } else if (data.type === 'media.hide') {
+                    setMediaModalVisible(false);
+                    setMediaUrl(null);
+                    setMediaType(null);
                 }
+                
+
+
+
             } catch (err) {
                 console.error('Ошибка обработки сообщения:', err);
                 message.error(`Ошибка обработки сообщения: ${err}`);
@@ -329,6 +370,47 @@ const Overlay: React.FC = () => {
                     </div>
                 </Modal>
             )}
+            {mediaModalVisible && mediaUrl && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        zIndex: 9999,
+                        width: '100vw',
+                        height: '100vh',
+                        backgroundColor: 'black',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    {mediaType === 'image' ? (
+                        <img
+                            src={mediaUrl}
+                            alt="media"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                objectFit: 'contain',
+                            }}
+                        />
+                    ) : (
+                        <video
+                            src={mediaUrl}
+                            autoPlay
+                            loop
+                            controls={false}
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                objectFit: 'contain',
+                            }}
+                        />
+                    )}
+                </div>
+            )}
+
         </>
     );
 };

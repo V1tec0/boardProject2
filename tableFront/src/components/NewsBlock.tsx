@@ -33,7 +33,7 @@ const NewsBlock: React.FC = () => {
             dataSource={news}
             renderItem={(item) => (
                 <List.Item>
-                    <New title={item.title} small_text={item.small_text} images={item.images} />
+                    <New title={item.title} small_text={item.small_text} images={item.image} />
                 </List.Item>
             )}
         />

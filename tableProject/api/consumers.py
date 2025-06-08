@@ -2,11 +2,12 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.middleware import BaseMiddleware
 from asgiref.sync import sync_to_async, async_to_sync
+from django.core.cache import cache
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import DisplayedNews, Message
+from .models import News, Message
 from channels.db import database_sync_to_async
-from .serializers import DisplayedNewsSerializer
+from .serializers import NewsSerializer
 from .utils import send_message_logic
 
 
@@ -35,14 +36,14 @@ class NewsConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def get_initial_data(self):
-        displayed_news = DisplayedNews.objects.select_related('fk_news').all().order_by('-created_at')
-        return DisplayedNewsSerializer(displayed_news, many=True).data
+        news = News.objects.filter(is_displayed=True).order_by('display_order', '-created_at')
+        return NewsSerializer(news, many=True).data
 
     @database_sync_to_async  # Используем специальный декоратор для ORM
     def get_and_serialize_data(self):
         # Загружаем данные и сериализуем их синхронно
-        displayed_news = DisplayedNews.objects.select_related('fk_news').all().order_by('-created_at')
-        serializer = DisplayedNewsSerializer(displayed_news, many=True)
+        news = News.objects.filter(is_displayed=True).order_by('display_order', '-created_at')
+        serializer = NewsSerializer(news, many=True)
         return serializer.data
 
 class WebSocketCORSMiddleware(BaseMiddleware):
@@ -77,6 +78,22 @@ class MyWebSocketConsumer(AsyncWebsocketConsumer):
             'message': 'WebSocket connection established'
         }))
 
+        horizontal = cache.get("background_horizontal")
+        vertical = cache.get("background_vertical")
+
+        if horizontal:
+            await self.send(text_data=json.dumps({
+                "type": "background_change",
+                "image_url": horizontal,
+                "orientation": "horizontal"
+            }))
+        if vertical:
+            await self.send(text_data=json.dumps({
+                "type": "background_change",
+                "image_url": vertical,
+                "orientation": "vertical"
+            }))
+
         messages = await self.get_all_message_statuses()
         await self.send(text_data=json.dumps({
             'type': 'all_statuses',
@@ -97,17 +114,32 @@ class MyWebSocketConsumer(AsyncWebsocketConsumer):
         if msg_type == 'send_message':
             await self.handle_send_message(data)
 
+        if msg_type == "reload":
+            await self.send_reload()
+
+    async def send_reload(self):
+        await self.channel_layer.group_send(
+            "websocket_group",
+            {
+                "type": "send.message",
+                "pk_message": -1,
+                "text": "reload",
+                "isprimary": False,
+                "action": "hide"
+            }
+        )
+
     async def handle_send_message(self, data):
         pk = data.get('message_id')
         show_at = data.get('show_at')  # в ISO формате или None
         duration = data.get('duration')  # int или None
+        action = data.get('action')
 
-        await self.send_to_view(pk, show_at, duration)
-
+        await self.send_to_view(pk, show_at, duration, action)
     @database_sync_to_async
-    def send_to_view(self, pk, show_at, duration):
+    def send_to_view(self, pk, show_at, duration, action):
         # Имитируем вызов логики из views.py (можно перенести её в утилиту)
-        send_message_logic(pk, show_at, duration)
+        send_message_logic(pk, show_at, duration, action)
 
     async def reload_clients(self, event):
         """Отправляем команду перезагрузки всем подключенным клиентам"""
@@ -124,6 +156,25 @@ class MyWebSocketConsumer(AsyncWebsocketConsumer):
                 'pk_message': event['pk_message'],
                 'isshowing': event['isshowing'],
             }
+        }))
+
+    async def change_background(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "background_change",
+            "image_url": event.get("image_url"),
+            "orientation": event.get("orientation")
+        }))
+
+    async def media_broadcast(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "media.broadcast",
+            "media_url": event.get("media_url"),
+            "media_type": event.get("media_type")
+        }))
+
+    async def media_hide(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "media.hide"
         }))
 
     async def send_message(self, event):

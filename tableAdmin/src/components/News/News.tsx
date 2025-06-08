@@ -41,20 +41,18 @@ export default function News() {
                 }
 
                 const allNews: NewsItem[] = await allNewsResponse.json();
-                const displayedData = await displayedResponse.json();
 
                 // Обрабатываем displayedData, учитывая структуру с сервера
-                const displayedNews = displayedData.map((item: any) => ({
-                    ...item.news,
+                const displayedNews = allNews.filter(n => n.is_displayed).map(n => ({
+                    ...n,
                     column: 'displayed'
                 }));
-
+                
                 setColumns({
-                    available: allNews.filter(n =>
-                        !displayedNews.some(d => d.pk_news === n.pk_news)
-                    ),
+                    available: allNews.filter(n => !n.is_displayed),
                     displayed: displayedNews
                 });
+                
             } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
             }
@@ -251,7 +249,7 @@ export default function News() {
                 credentials: 'include',
                 body: JSON.stringify({
                     news_ids: columns.displayed.map((n) => n.pk_news),
-                }),
+                }),                
             });
 
             if (!response.ok) {
@@ -283,8 +281,8 @@ export default function News() {
                 onDragEnd={handleDragEnd}
                 onDragOver={handleDragOver}
             >
+                <Title level={1}>Управление новостями</Title>
                 <div className="news-container">
-                    <Title level={1}>Управление новостями</Title>
                     <Button type="primary" onClick={() => setIsModalOpen(true)} style={{marginBottom: '20px'}}>
                         Добавить новость
                     </Button>

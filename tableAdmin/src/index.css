@@ -85,3 +85,7 @@ button:focus-visible {
     background-color: #e6f7ff !important;
     font-weight: 500;
 }
+
+.ant-card-actions {
+    width: 400px;
+}

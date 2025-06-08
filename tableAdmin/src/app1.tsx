@@ -15,7 +15,7 @@ import Schedule from './components/Schedule/Schedule';
 import News from './components/News/News';
 import Messages from './components/Messages/Messages';
 import Settings from './components/Settings';
-import MainPage from './components/MainPage';
+import MainPage from './components/MainPage/MainPage';
 import AuthModal from './components/AuthModal';
 import Users from './components/Users';
 

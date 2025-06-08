@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Carousel, Row, Col, Spin, Alert, QRCode, Flex } from 'antd';
+import { Carousel, Col, Spin, Alert, QRCode } from 'antd';
 import TimeHeader from './TimeHeader';
 import New from './New';
 import { INews, NewsItem } from '../types';
@@ -45,7 +45,7 @@ const MainCarouselLayout: React.FC<{ isPortrait: boolean }> = ({ isPortrait }) =
             fetch(`${import.meta.env.VITE_API_URL}displayed-news/`).then(res => res.json()).catch(() => setNewsError(true))
         ]).then(([scheduleData, newsData]) => {
             if (scheduleData && scheduleData.schedules) setSchedules(scheduleData.schedules);
-            if (newsData) setNews(newsData.map((item: INews) => item.news));
+            if (newsData) setNews(newsData);
         }).finally(() => setLoading(false));
     }, []);
 
@@ -150,7 +150,7 @@ const MainCarouselLayout: React.FC<{ isPortrait: boolean }> = ({ isPortrait }) =
 
 
     return (
-        <div>
+        <div style={{ width: '65vw', height: '100vh' }}>
             <TimeHeader />
             <div style={{ 
                 display: 'flex',
@@ -215,7 +215,7 @@ const MainCarouselLayout: React.FC<{ isPortrait: boolean }> = ({ isPortrait }) =
                                     boxSizing: 'border-box',
                                 }}>
                                     {group.map((n, i) => (
-                                        <New key={i} title={n.title} small_text={n.small_text} images={n.images} />
+                                        <New key={i} title={n.title} small_text={n.small_text} image={n.image} />
                                     ))}
                                 </div>
                             ))}

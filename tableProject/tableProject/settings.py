@@ -102,11 +102,15 @@ CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
 
-CHANNEL_LAYERS ={
-    'default':{
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-    }
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("192.168.65.73", 6379)],  # ← IP из WSL
+        },
+    },
 }
+
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -170,7 +174,7 @@ AUTH_USER_MODEL = 'api.User'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SITE_NAME = 'LocalHost.QWE'
+SITE_NAME = '"Управление табло"'
 
 DEFAULT_FROM_EMAIL = 'v1tec00@yandex.ru'
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -182,6 +186,19 @@ EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_HOST_USER = 'v1tec00@yandex.ru'
 EMAIL_HOST_PASSWORD = 'ethrjslrffhtkecx'
+
+# IMAP настройки (частично используют SMTP-конфигурацию)
+IMAP_HOST = 'imap.yandex.ru'
+IMAP_PORT = 993  # стандартный SSL порт
+IMAP_USE_SSL = EMAIL_USE_SSL  # переиспользуем
+IMAP_EMAIL = EMAIL_HOST_USER  # переиспользуем логин
+IMAP_PASSWORD = EMAIL_HOST_PASSWORD  # переиспользуем пароль
+IMAP_FOLDER = 'INBOX'
+
+# Поведение idle-воркера
+IMAP_RECONNECT_INTERVAL = 60 * 25  # каждые 25 минут переподключение
+IMAP_IDLE_TIMEOUT = 300  # максимум для IDLE — 5 мин
+
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

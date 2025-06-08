@@ -13,7 +13,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 const Schedule: React.FC = () => {
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [editSchedule, setEditSchedule] = useState<{ date: string; type: string } | null>(null);
+    const [editSchedule, setEditSchedule] = useState<{ date: string; type: 's' | 'p' | 'z' } | null>(null);
 
     const { data: scheduleData, error, mutate } = useSWR(
         'http://localhost:8000/api/schedule/',
@@ -21,14 +21,9 @@ const Schedule: React.FC = () => {
         { refreshInterval: 5000 }
     );
 
-    const handleEditSchedule = (date: string, type: string) => {
-        setEditSchedule({ date, type });
-        setShowEditModal(true);
-    };
-
     return (
         <div style={{ marginBottom: 32 }}>
-            <Title level={2}>Управление расписанием</Title>
+            <Title level={1}>Управление расписанием</Title>
             <Tabs defaultActiveKey="schedule" type="card">
                 <TabPane tab="Расписание" key="schedule">
                     <Button type="primary" onClick={() => setShowScheduleModal(true)} style={{ marginBottom: 16 }}>
