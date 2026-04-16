@@ -28,6 +28,6 @@ jobs:
         python -m pip install --upgrade pip
     - name: Run Tests
       run: |
-        source venv/Scripts/activate
+        venv/Scripts/activate
         cd tableProject
         python manage.py test
