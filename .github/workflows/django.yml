@@ -27,4 +27,4 @@ jobs:
         source ./venv/Scripts/activate
     - name: Run Tests
       run: |
-        python manage.py test
+        python ./tableProject/manage.py test
